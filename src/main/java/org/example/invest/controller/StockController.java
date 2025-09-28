@@ -1,6 +1,7 @@
 package org.example.invest.controller;
 
 import org.example.invest.dto.NseAllIndicesResponse;
+import org.example.invest.dto.NseEtfResponse;
 import org.example.invest.service.StockService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -68,5 +69,25 @@ public class StockController {
     @GetMapping("/company/{symbol}")
     public String getCompanyInfo(@PathVariable String symbol) {
         return stockService.getCompanyInfo(symbol);
+    }
+    
+    /**
+     * Get ETF data from NSE with custom cookie
+     * @param cookie Cookie header for NSE API authentication
+     * @return NSE ETF response with detailed ETF data
+     */
+    @GetMapping("/etf")
+    public NseEtfResponse getEtfData(@RequestHeader(value = "Cookie", required = false) String cookie
+            , @RequestParam(value = "index", required = false) String index) {
+        return stockService.getEtfData(cookie, index);
+    }
+    
+    /**
+     * Get ETF data from NSE using default cookie
+     * @return NSE ETF response with detailed ETF data
+     */
+    @GetMapping("/etf/default")
+    public NseEtfResponse getEtfDataDefault() {
+        return stockService.getEtfData();
     }
 }

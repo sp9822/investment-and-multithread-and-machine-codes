@@ -1,6 +1,7 @@
 package org.example.invest.client;
 
 import org.example.invest.dto.NseAllIndicesResponse;
+import org.example.invest.dto.NseEtfResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -44,4 +45,12 @@ public interface NseClient {
      */
     @GetMapping("/company/{symbol}")
     String getCompanyInfo(@PathVariable("symbol") String symbol);
+    
+    /**
+     * Get ETF data from NSE
+     * @param cookie Cookie header for NSE API authentication
+     * @return NSE ETF response with detailed ETF data
+     */
+    @GetMapping("/etf")
+    NseEtfResponse getEtfData(@RequestHeader("Cookie") String cookie);
 }
