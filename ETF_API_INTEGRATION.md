@@ -191,3 +191,4 @@ The integration uses existing dependencies:
 - The API returns data in real-time during market hours
 - All price values are returned as strings to preserve precision
 - The integration follows the same patterns as existing NSE API integrations
+

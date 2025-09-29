@@ -136,7 +136,7 @@ public class EtfData {
 
     public void setProcessedcompanyName(String processedcompanyName) {
         if (this.meta == null) {
-            return;
+            this.meta = new EtfMeta();
         }
         this.meta.setProcessedcompanyName(processedcompanyName);
     }

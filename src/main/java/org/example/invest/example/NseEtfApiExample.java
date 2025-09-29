@@ -26,7 +26,7 @@ public class NseEtfApiExample {
             NseEtfResponse response = stockService.getEtfData();
 
             System.out.println("Timestamp: " + response.getTimestamp());
-            System.out.println("Total ETFs: " + response.getData().size());
+            System.out.println("Total ETFs: " + (response.getData() != null ? response.getData().size() : 0));
             System.out.println("Market Summary:");
             System.out.println("  Advances: " + response.getAdvances());
             System.out.println("  Declines: " + response.getDeclines());
@@ -50,34 +50,40 @@ public class NseEtfApiExample {
 
             // Display top 5 ETFs
             System.out.println("\nTop 5 ETFs:");
-            response.getData().stream()
-                    .limit(5)
-                    .forEach(etf -> {
-                        System.out.println(String.format(
-                                "  %s (%s): %s (%.2f%%)",
-                                etf.getSymbol(),
-                                etf.getAssets(),
-                                etf.getLtP(),
-                                etf.getPerChange365d() != null ? etf.getPerChange365d() : 0.0
-                        ));
-                    });
+            if (response.getData() != null) {
+                response.getData().stream()
+                        .limit(5)
+                        .forEach(etf -> {
+                            System.out.println(String.format(
+                                    "  %s (%s): %s (%.2f%%)",
+                                    etf.getSymbol(),
+                                    etf.getAssets(),
+                                    etf.getLtP(),
+                                    etf.getPerChange365d() != null ? etf.getPerChange365d() : 0.0
+                            ));
+                        });
+            }
 
             // Find specific ETF by symbol
             String targetSymbol = "MONQ50";
-            response.getData().stream()
-                    .filter(etf -> targetSymbol.equals(etf.getSymbol()))
-                    .findFirst()
-                    .ifPresent(etf -> {
-                        System.out.println("\nSpecific ETF Details for " + targetSymbol + ":");
-                        System.out.println("  Company: " + etf.getMeta().getCompanyName());
-                        System.out.println("  Industry: " + etf.getMeta().getIndustry());
-                        System.out.println("  ISIN: " + etf.getMeta().getIsin());
-                        System.out.println("  Listing Date: " + etf.getMeta().getListingDate());
-                        System.out.println("  Current Price: " + etf.getLtP());
-                        System.out.println("  NAV: " + etf.getNav());
-                        System.out.println("  365d Change: " + etf.getPerChange365d() + "%");
-                        System.out.println("  30d Change: " + etf.getPerChange30d() + "%");
-                    });
+            if (response.getData() != null) {
+                response.getData().stream()
+                        .filter(etf -> targetSymbol.equals(etf.getSymbol()))
+                        .findFirst()
+                        .ifPresent(etf -> {
+                            System.out.println("\nSpecific ETF Details for " + targetSymbol + ":");
+                            if (etf.getMeta() != null) {
+                                System.out.println("  Company: " + etf.getMeta().getCompanyName());
+                                System.out.println("  Industry: " + etf.getMeta().getIndustry());
+                                System.out.println("  ISIN: " + etf.getMeta().getIsin());
+                                System.out.println("  Listing Date: " + etf.getMeta().getListingDate());
+                            }
+                            System.out.println("  Current Price: " + etf.getLtP());
+                            System.out.println("  NAV: " + etf.getNav());
+                            System.out.println("  365d Change: " + etf.getPerChange365d() + "%");
+                            System.out.println("  30d Change: " + etf.getPerChange30d() + "%");
+                        });
+            }
 
         } catch (Exception e) {
             System.err.println("Error demonstrating ETF API usage: " + e.getMessage());
@@ -96,13 +102,15 @@ public class NseEtfApiExample {
             NseEtfResponse response = stockService.getEtfData(cookie, null, null);
 
             System.out.println("Timestamp: " + response.getTimestamp());
-            System.out.println("Total ETFs: " + response.getData().size());
+            System.out.println("Total ETFs: " + (response.getData() != null ? response.getData().size() : 0));
 
             // Display ETF symbols
             System.out.println("\nETF Symbols:");
-            response.getData().stream()
-                    .map(etf -> etf.getSymbol())
-                    .forEach(symbol -> System.out.println("  " + symbol));
+            if (response.getData() != null) {
+                response.getData().stream()
+                        .map(etf -> etf.getSymbol())
+                        .forEach(symbol -> System.out.println("  " + symbol));
+            }
 
         } catch (Exception e) {
             System.err.println("Error demonstrating ETF API usage with cookie: " + e.getMessage());
@@ -110,3 +118,4 @@ public class NseEtfApiExample {
         }
     }
 }
+

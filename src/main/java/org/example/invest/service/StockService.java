@@ -106,7 +106,12 @@ public class StockService {
      * @return NSE all indices response
      */
     public NseAllIndicesResponse getAllIndices() {
-        return process(getAllIndices(null));
+        try {
+            String defaultCookie = NseCookieUtil.getDefaultCookie();
+            return process(nseClient.getAllIndices(defaultCookie));
+        } catch (Exception e) {
+            throw new RuntimeException("Error fetching NSE indices data: " + e.getMessage(), e);
+        }
     }
 
     public NseAllIndicesResponse getInvestableIndices(String cookie) {
@@ -125,7 +130,9 @@ public class StockService {
 
     private boolean isInvestableIndex(IndexData indexData) {
         return (indexData != null
+                && indexData.getLatestToYearLowDiffPer() != null
                 && indexData.getLatestToYearLowDiffPer() < 12D
+                && indexData.getYearLowToYearHighDiffPer() != null
                 && indexData.getYearLowToYearHighDiffPer() > 12D
                 && indexData.getPe() != null && indexData.getPe() <= 22D
                 && indexData.getPb() != null && indexData.getPb() <= 3.5D
@@ -188,8 +195,8 @@ public class StockService {
     }
 
     private NseEtfResponse process(NseEtfResponse etfData, String index, String indexSymbol) {
-        filter(etfData, index, indexSymbol);
         deriveMetrics(etfData);
+        filter(etfData, index, indexSymbol);
         sort(etfData);
         return etfData;
     }
@@ -208,10 +215,18 @@ public class StockService {
     }
 
     private boolean isEtfOfProvidedIndex(String indexSubStr, String indexSymbolSubStr, EtfData etf) {
-        return (etf.getProcessedAssets().contains(indexSubStr)
-                || etf.getProcessedCompanyName().contains(indexSubStr)
-                || etf.getProcessedAssets().contains(indexSymbolSubStr)
-                || etf.getProcessedCompanyName().contains(indexSymbolSubStr));
+        if (StringUtils.isEmpty(indexSubStr) && StringUtils.isEmpty(indexSymbolSubStr)) {
+            return true; // No index specified, so no match
+        }
+        if (StringUtils.isEmpty(etf.getProcessedAssets()) && StringUtils.isEmpty(etf.getProcessedCompanyName())) {
+            return false;
+        }
+        return (
+                (StringUtils.isNotEmpty(etf.getProcessedAssets()) && (etf.getProcessedAssets().contains(indexSubStr)
+                        || etf.getProcessedAssets().contains(indexSymbolSubStr)))
+                        || (StringUtils.isNotEmpty(etf.getProcessedCompanyName()) && (etf.getProcessedCompanyName().contains(indexSubStr)
+                        || etf.getProcessedCompanyName().contains(indexSymbolSubStr)))
+        );
     }
 
     private void deriveMetrics(NseEtfResponse etfData) {
@@ -280,8 +295,8 @@ public class StockService {
         subStr = subStr.replaceAll("-", "");
         subStr = subStr.replaceAll("_", "");
         subStr = subStr.replaceAll(" ", "");
-        subStr.replaceAll("sector", "");
-        subStr.replaceAll("sec", "");
+        subStr = subStr.replaceAll("sector", "");
+        subStr = subStr.replaceAll("sec", "");
         return subStr;
     }
 
@@ -449,10 +464,14 @@ public class StockService {
     }
 
     private boolean isPerformingEtf(EtfData etfData) {
-        return (etfData.getLatestToYearLowDiffPer() < 12D
+        return (etfData != null
+                && etfData.getLatestToYearLowDiffPer() != null
+                && etfData.getLatestToYearLowDiffPer() < 12D
+                && etfData.getYearLowToYearHighDiffPer() != null
                 && etfData.getYearLowToYearHighDiffPer() > 12D
                 && etfData.getNavToMarketLtPDeltaPercent() != null
                 && etfData.getNavToMarketLtPDeltaPercent() > -0.1D
-                && (etfData.getNearWKH()) > 6D);
+                && etfData.getNearWKH() != null
+                && etfData.getNearWKH() > 6D);
     }
 }
