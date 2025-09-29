@@ -11,20 +11,20 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class NseEtfApiExample {
-    
+
     @Autowired
     private StockService stockService;
-    
+
     /**
      * Example method to demonstrate NSE ETF API usage
      */
     public void demonstrateEtfApiUsage() {
         try {
             System.out.println("=== NSE ETF API Demo ===");
-            
+
             // Get ETF data using default cookie
             NseEtfResponse response = stockService.getEtfData();
-            
+
             System.out.println("Timestamp: " + response.getTimestamp());
             System.out.println("Total ETFs: " + response.getData().size());
             System.out.println("Market Summary:");
@@ -34,7 +34,7 @@ public class NseEtfApiExample {
             System.out.println("  Total Traded Value: " + response.getTotalTradedValue());
             System.out.println("  Total Traded Volume: " + response.getTotalTradedVolume());
             System.out.println("  NAV Date: " + response.getNavDate());
-            
+
             // Display market status
             if (response.getMarketStatus() != null) {
                 System.out.println("\nMarket Status:");
@@ -47,21 +47,21 @@ public class NseEtfApiExample {
                 System.out.println("  Percent Change: " + response.getMarketStatus().getPercentChange());
                 System.out.println("  Message: " + response.getMarketStatus().getMarketStatusMessage());
             }
-            
+
             // Display top 5 ETFs
             System.out.println("\nTop 5 ETFs:");
             response.getData().stream()
                     .limit(5)
                     .forEach(etf -> {
                         System.out.println(String.format(
-                            "  %s (%s): %s (%.2f%%)",
-                            etf.getSymbol(),
-                            etf.getAssets(),
-                            etf.getLtP(),
-                            etf.getPerChange365d() != null ? etf.getPerChange365d() : 0.0
+                                "  %s (%s): %s (%.2f%%)",
+                                etf.getSymbol(),
+                                etf.getAssets(),
+                                etf.getLtP(),
+                                etf.getPerChange365d() != null ? etf.getPerChange365d() : 0.0
                         ));
                     });
-            
+
             // Find specific ETF by symbol
             String targetSymbol = "MONQ50";
             response.getData().stream()
@@ -78,32 +78,32 @@ public class NseEtfApiExample {
                         System.out.println("  365d Change: " + etf.getPerChange365d() + "%");
                         System.out.println("  30d Change: " + etf.getPerChange30d() + "%");
                     });
-            
+
         } catch (Exception e) {
             System.err.println("Error demonstrating ETF API usage: " + e.getMessage());
             e.printStackTrace();
         }
     }
-    
+
     /**
      * Example method to demonstrate ETF API usage with custom cookie
      */
     public void demonstrateEtfApiUsageWithCookie(String cookie) {
         try {
             System.out.println("=== NSE ETF API Demo with Custom Cookie ===");
-            
+
             // Get ETF data using custom cookie
-            NseEtfResponse response = stockService.getEtfData(cookie, null);
-            
+            NseEtfResponse response = stockService.getEtfData(cookie, null, null);
+
             System.out.println("Timestamp: " + response.getTimestamp());
             System.out.println("Total ETFs: " + response.getData().size());
-            
+
             // Display ETF symbols
             System.out.println("\nETF Symbols:");
             response.getData().stream()
                     .map(etf -> etf.getSymbol())
                     .forEach(symbol -> System.out.println("  " + symbol));
-            
+
         } catch (Exception e) {
             System.err.println("Error demonstrating ETF API usage with cookie: " + e.getMessage());
             e.printStackTrace();

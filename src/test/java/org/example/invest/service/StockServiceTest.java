@@ -12,15 +12,20 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
-import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class StockServiceTest {
-    
+
     @InjectMocks
     private StockService stockService;
 
@@ -84,14 +89,14 @@ public class StockServiceTest {
         assertEquals(1, result.getData().size());
         assertEquals("NIFTY 50", result.getData().get(0).getIndex());
         assertEquals(19500.50, result.getData().get(0).getLast());
-        
+
         verify(nseClient, times(1)).getAllIndices(testCookie);
     }
 
     @Test
     void getAllIndices_WithNullCookie_ShouldUseDefaultCookie() {
         // Arrange
-        when(nseClient.getAllIndices(anyString())).thenReturn(mockResponse);
+        when(nseClient.getAllIndices(any())).thenReturn(mockResponse);
 
         // Act
         NseAllIndicesResponse result = stockService.getAllIndices(null);
@@ -99,7 +104,7 @@ public class StockServiceTest {
         // Assert
         assertNotNull(result);
         assertEquals(mockResponse.getTimestamp(), result.getTimestamp());
-        verify(nseClient, times(1)).getAllIndices(anyString());
+        verify(nseClient, times(1)).getAllIndices(any());
     }
 
     @Test
@@ -149,7 +154,7 @@ public class StockServiceTest {
     @Test
     void getAllIndices_WithoutCookieParameter_ShouldUseDefaultCookie() {
         // Arrange
-        when(nseClient.getAllIndices(anyString())).thenReturn(mockResponse);
+        when(nseClient.getAllIndices(any())).thenReturn(mockResponse);
 
         // Act
         NseAllIndicesResponse result = stockService.getAllIndices();
@@ -157,7 +162,7 @@ public class StockServiceTest {
         // Assert
         assertNotNull(result);
         assertEquals(mockResponse.getTimestamp(), result.getTimestamp());
-        verify(nseClient, times(1)).getAllIndices(anyString());
+        verify(nseClient, times(1)).getAllIndices(any());
     }
 
     @Test

@@ -1,7 +1,12 @@
 package org.example.invest.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 /**
  * DTO for individual index data in NSE allIndices API response
@@ -13,15 +18,19 @@ import lombok.*;
 @ToString
 @EqualsAndHashCode
 public class IndexData {
-    
+
     @JsonProperty("key")
     private String key;
-    
+
     @JsonProperty("index")
     private String index;
-    
+
+    private String processedIndex;
+
     @JsonProperty("indexSymbol")
     private String indexSymbol;
+
+    private String processedIndexSymbol;
 
     @JsonProperty("latestToYearLowDiffPer")
     private Double latestToYearLowDiffPer;
@@ -64,7 +73,7 @@ public class IndexData {
 
     @JsonProperty("open")
     private Double open;
-    
+
     @JsonProperty("high")
     private Double high;
 
@@ -73,25 +82,25 @@ public class IndexData {
 
     @JsonProperty("yearHigh")
     private Double yearHigh;
-    
+
     @JsonProperty("indicativeClose")
     private Double indicativeClose;
-    
+
     @JsonProperty("pe")
     private Double pe;
-    
+
     @JsonProperty("pb")
     private Double pb;
-    
+
     @JsonProperty("dy")
     private Double dy;
-    
+
     @JsonProperty("declines")
     private Long declines;
-    
+
     @JsonProperty("advances")
     private Long advances;
-    
+
     @JsonProperty("unchanged")
     private Long unchanged;
 
