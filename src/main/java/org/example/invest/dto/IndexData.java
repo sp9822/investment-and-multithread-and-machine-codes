@@ -35,6 +35,9 @@ public class IndexData {
     @JsonProperty("latestToYearLowDiffPer")
     private Double latestToYearLowDiffPer;
 
+    @JsonProperty("yearHighToLatestDiffPer")
+    private Double yearHighToLatestDiffPer;
+
     @JsonProperty("yearLowToYearHighDiffPer")
     private Double yearLowToYearHighDiffPer;
 
@@ -47,27 +50,6 @@ public class IndexData {
     @JsonProperty("variation")
     private Double variation;
 
-    @JsonProperty("previousClose")
-    private Double previousClose;
-
-    @JsonProperty("chartTodayPath")
-    private String chartTodayPath;
-
-    @JsonProperty("latestToLastWeekDiffPer")
-    private Double latestToLastWeekDiffPer;
-
-    @JsonProperty("perChange30d")
-    private Double perChange30d;
-
-    @JsonProperty("chart30dPath")
-    private String chart30dPath;
-
-    @JsonProperty("perChange365d")
-    private Double perChange365d;
-
-    @JsonProperty("chart365dPath")
-    private String chart365dPath;
-
     @JsonProperty("low")
     private Double low;
 
@@ -77,14 +59,56 @@ public class IndexData {
     @JsonProperty("high")
     private Double high;
 
+    @JsonProperty("previousClose")
+    private Double previousClose;
+
+    @JsonProperty("previousDayVal")
+    private Double previousDayVal;
+
+    @JsonProperty("previousDay")
+    private String previousDay;
+
+    @JsonProperty("chartTodayPath")
+    private String chartTodayPath;
+
+    @JsonProperty("latestToLastWeekDiffPer")
+    private Double latestToLastWeekDiffPer;
+
+    @JsonProperty("oneWeekAgoVal")
+    private Double oneWeekAgoVal;
+
+    @JsonProperty("oneWeekAgo")
+    private String oneWeekAgo;
+
+    @JsonProperty("perChange30d")
+    private Double perChange30d;
+
+    @JsonProperty("oneMonthAgoVal")
+    private Double oneMonthAgoVal;
+
+    @JsonProperty("date30dAgo")
+    private String date30dAgo;
+
+    @JsonProperty("chart30dPath")
+    private String chart30dPath;
+
+    @JsonProperty("perChange365d")
+    private Double perChange365d;
+
+    @JsonProperty("oneYearAgoVal")
+    private Double oneYearAgoVal;
+
+    @JsonProperty("date365dAgo")
+    private String date365dAgo;
+
+    @JsonProperty("chart365dPath")
+    private String chart365dPath;
+
     @JsonProperty("yearLow")
     private Double yearLow;
 
     @JsonProperty("yearHigh")
     private Double yearHigh;
-
-    @JsonProperty("indicativeClose")
-    private Double indicativeClose;
 
     @JsonProperty("pe")
     private Double pe;
@@ -104,29 +128,8 @@ public class IndexData {
     @JsonProperty("unchanged")
     private Long unchanged;
 
-    @JsonProperty("previousDayVal")
-    private Double previousDayVal;
-
-    @JsonProperty("previousDay")
-    private String previousDay;
-
-    @JsonProperty("oneWeekAgoVal")
-    private Double oneWeekAgoVal;
-
-    @JsonProperty("oneWeekAgo")
-    private String oneWeekAgo;
-
-    @JsonProperty("oneMonthAgoVal")
-    private Double oneMonthAgoVal;
-
-    @JsonProperty("date30dAgo")
-    private String date30dAgo;
-
-    @JsonProperty("oneYearAgoVal")
-    private Double oneYearAgoVal;
-
-    @JsonProperty("date365dAgo")
-    private String date365dAgo;
+    @JsonProperty("indicativeClose")
+    private Double indicativeClose;
 }
 
 

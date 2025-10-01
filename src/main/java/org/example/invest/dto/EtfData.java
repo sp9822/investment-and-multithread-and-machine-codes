@@ -58,9 +58,6 @@ public class EtfData {
     @JsonProperty("yearLowToYearHighDiffPer")
     private Double yearLowToYearHighDiffPer;
 
-    @JsonProperty("indexData")
-    private IndexData indexData;
-
     @JsonProperty("nearWKH")
     private Double nearWKH;
 
@@ -75,6 +72,9 @@ public class EtfData {
 
     @JsonProperty("per")
     private Double per;
+
+    @JsonProperty("prevClose")
+    private String prevClose;
 
     @JsonProperty("chartTodayPath")
     private String chartTodayPath;
@@ -106,8 +106,11 @@ public class EtfData {
     @JsonProperty("trdVal")
     private String trdVal;
 
-    @JsonProperty("prevClose")
-    private String prevClose;
+    @JsonProperty("indexData")
+    private IndexData indexData;
+
+    @JsonProperty("meta")
+    private EtfMeta meta;
 
     @JsonProperty("stockIndClosePrice")
     private String stockIndClosePrice;
@@ -123,9 +126,6 @@ public class EtfData {
 
     @JsonProperty("ypc")
     private Double ypc;
-
-    @JsonProperty("meta")
-    private EtfMeta meta;
 
     public String getCompanyName() {
         if (this.meta == null) {

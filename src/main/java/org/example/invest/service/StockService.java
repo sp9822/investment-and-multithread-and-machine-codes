@@ -52,10 +52,11 @@ public class StockService {
 
     private void deriveMetrics(NseAllIndicesResponse allIndices) {
         for (IndexData indexData : allIndices.getData()) {
-            indexData.setProcessedIndex(removeHypnUnderScorSpcSecAndGetLowerCase(indexData.getIndex()));
-            indexData.setProcessedIndexSymbol(removeHypnUnderScorSpcSecAndGetLowerCase(indexData.getIndex()));
+            indexData.setProcessedIndex(removeHypnUnderScorSpcSecIndAndGetLowerCase(indexData.getIndex()));
+            indexData.setProcessedIndexSymbol(removeHypnUnderScorSpcSecIndAndGetLowerCase(indexData.getIndex()));
             indexData.setYearLowToYearHighDiffPer(getYearLowToYearHighDiffPer(indexData));
             indexData.setLatestToYearLowDiffPer(getLatestToYearLowDiffPer(indexData));
+            indexData.setYearHighToLatestDiffPer(getDeltaPercent(indexData.getYearHigh(), indexData.getLast()));
             indexData.setLatestToLastWeekDiffPer(getLatestToLastWeekDiffPer(indexData));
         }
     }
@@ -130,10 +131,14 @@ public class StockService {
 
     private boolean isInvestableIndex(IndexData indexData) {
         return (indexData != null
-                && indexData.getLatestToYearLowDiffPer() != null
-                && indexData.getLatestToYearLowDiffPer() < 12D
-                && indexData.getYearLowToYearHighDiffPer() != null
-                && indexData.getYearLowToYearHighDiffPer() > 12D
+                && StringUtils.isNotEmpty(indexData.getDate365dAgo())
+                && indexData.getYearLow() != null && indexData.getYearLow() > ZERO_D
+                && indexData.getYearHigh() != null && indexData.getYearHigh() > ZERO_D
+                && indexData.getOneYearAgoVal() != null && indexData.getOneYearAgoVal() > ZERO_D
+                && indexData.getYearHigh() > indexData.getOneYearAgoVal()
+                && indexData.getLatestToYearLowDiffPer() != null && indexData.getLatestToYearLowDiffPer() < 18D//Ideally indexData.getLatestToYearLowDiffPer() < 12D
+                && indexData.getYearLowToYearHighDiffPer() != null && indexData.getYearLowToYearHighDiffPer() > 10D //Yearly 10% change
+                && indexData.getYearHighToLatestDiffPer() != null && indexData.getYearHighToLatestDiffPer() > 4D//Makes sure we dont buy at year high
                 && indexData.getPe() != null && indexData.getPe() <= 22D
                 && indexData.getPb() != null && indexData.getPb() <= 3.5D
                 && indexData.getDy() != null && indexData.getDy() >= 1.2D);
@@ -202,8 +207,8 @@ public class StockService {
     }
 
     private void filter(NseEtfResponse etfData, String index, String indexSymbol) {
-        String indexSubStr = removeHypnUnderScorSpcSecAndGetLowerCase(index);
-        String indexSymbolSubStr = removeHypnUnderScorSpcSecAndGetLowerCase(indexSymbol);
+        String indexSubStr = removeHypnUnderScorSpcSecIndAndGetLowerCase(index);
+        String indexSymbolSubStr = removeHypnUnderScorSpcSecIndAndGetLowerCase(indexSymbol);
         if ((StringUtils.isEmpty(indexSubStr) && StringUtils.isEmpty(indexSymbolSubStr))
                 || etfData == null || CollectionUtils.isEmpty(etfData.getData())) {
             return;
@@ -234,8 +239,8 @@ public class StockService {
             return;
         }
         for (EtfData etf : etfData.getData()) {
-            etf.setProcessedAssets(removeHypnUnderScorSpcSecAndGetLowerCase(etf.getAssets()));
-            etf.setProcessedcompanyName(removeHypnUnderScorSpcSecAndGetLowerCase(etf.getCompanyName()));
+            etf.setProcessedAssets(removeHypnUnderScorSpcSecIndAndGetLowerCase(etf.getAssets()));
+            etf.setProcessedcompanyName(removeHypnUnderScorSpcSecIndAndGetLowerCase(etf.getCompanyName()));
             etf.setNavToMarketLtPDelta(getDelta(etf.getLtP(), etf.getNav()));
             etf.setNavToMarketLtPDeltaPercent(getDeltaPercent(etf.getNav(), etf.getLtP()));
             etf.setYearLowToYearHighDiffPer(getYearLowToYearHighDiffPer(etf));
@@ -287,7 +292,7 @@ public class StockService {
         });
     }
 
-    private String removeHypnUnderScorSpcSecAndGetLowerCase(String str) {
+    private String removeHypnUnderScorSpcSecIndAndGetLowerCase(String str) {
         if (StringUtils.isEmpty(str)) {
             return StringUtils.EMPTY;
         }
@@ -297,6 +302,7 @@ public class StockService {
         subStr = subStr.replaceAll(" ", "");
         subStr = subStr.replaceAll("sector", "");
         subStr = subStr.replaceAll("sec", "");
+        subStr = subStr.replaceAll("index", "");
         return subStr;
     }
 
@@ -380,8 +386,8 @@ public class StockService {
             return;
         }
         for (EtfData etf : nseEtfResponse.getData()) {
-            etf.setProcessedAssets(removeHypnUnderScorSpcSecAndGetLowerCase(etf.getAssets()));
-            etf.setProcessedcompanyName(removeHypnUnderScorSpcSecAndGetLowerCase(etf.getCompanyName()));
+            etf.setProcessedAssets(removeHypnUnderScorSpcSecIndAndGetLowerCase(etf.getAssets()));
+            etf.setProcessedcompanyName(removeHypnUnderScorSpcSecIndAndGetLowerCase(etf.getCompanyName()));
             etf.setNavToMarketLtPDelta(getDelta(etf.getLtP(), etf.getNav()));
             etf.setNavToMarketLtPDeltaPercent(getDeltaPercent(etf.getNav(), etf.getLtP()));
             etf.setYearLowToYearHighDiffPer(getYearLowToYearHighDiffPer(etf));
@@ -430,6 +436,7 @@ public class StockService {
         return processDto.getAllEtf().getData().stream()
                 .filter(etfData -> etfData != null
                         && StringUtils.isNotEmpty(etfData.getDate365dAgo())
+                        && etfData.getQty() != null && etfData.getQty() > 10000L //ideally, etfData.getQty() > 20,000L
                         && (isInvestableIndex(processDto, etfData) || isPerformingEtf(etfData)))
                 .collect(Collectors.toList());
     }
@@ -465,13 +472,9 @@ public class StockService {
 
     private boolean isPerformingEtf(EtfData etfData) {
         return (etfData != null
-                && etfData.getLatestToYearLowDiffPer() != null
-                && etfData.getLatestToYearLowDiffPer() < 12D
-                && etfData.getYearLowToYearHighDiffPer() != null
-                && etfData.getYearLowToYearHighDiffPer() > 12D
-                && etfData.getNavToMarketLtPDeltaPercent() != null
-                && etfData.getNavToMarketLtPDeltaPercent() > -0.1D
-                && etfData.getNearWKH() != null
-                && etfData.getNearWKH() > 6D);
+                && etfData.getLatestToYearLowDiffPer() != null && etfData.getLatestToYearLowDiffPer() < 18D //ideally, etfData.getLatestToYearLowDiffPer() < 12D
+                && etfData.getYearLowToYearHighDiffPer() != null && etfData.getYearLowToYearHighDiffPer() > 10D //Atleast 10% changes in year
+                && etfData.getNearWKH() != null && etfData.getNearWKH() > 4D//Makes sure we dont buy at year high
+                && etfData.getNavToMarketLtPDeltaPercent() != null && etfData.getNavToMarketLtPDeltaPercent() > -0.2D);//not buying too expensive from NAV
     }
 }
