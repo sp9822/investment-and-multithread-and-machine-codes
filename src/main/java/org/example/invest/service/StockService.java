@@ -2,11 +2,11 @@ package org.example.invest.service;
 
 import org.apache.commons.lang3.StringUtils;
 import org.example.invest.client.NseClient;
-import org.example.invest.dto.EtfData;
-import org.example.invest.dto.IndexData;
-import org.example.invest.dto.NseAllIndicesResponse;
-import org.example.invest.dto.NseEtfResponse;
-import org.example.invest.dto.ProcessDto;
+import org.example.invest.dto.nse.etf.EtfData;
+import org.example.invest.dto.nse.index.NseIndexData;
+import org.example.invest.dto.nse.index.NseAllIndicesResponse;
+import org.example.invest.dto.nse.etf.NseEtfResponse;
+import org.example.invest.dto.OldProcessDto;
 import org.example.invest.util.NseCookieUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -51,33 +51,33 @@ public class StockService {
     }
 
     private void deriveMetrics(NseAllIndicesResponse allIndices) {
-        for (IndexData indexData : allIndices.getData()) {
-            indexData.setProcessedIndex(removeHypnUnderScorSpcSecIndAndGetLowerCase(indexData.getIndex()));
-            indexData.setProcessedIndexSymbol(removeHypnUnderScorSpcSecIndAndGetLowerCase(indexData.getIndex()));
-            indexData.setYearLowToYearHighDiffPer(getYearLowToYearHighDiffPer(indexData));
-            indexData.setLatestToYearLowDiffPer(getLatestToYearLowDiffPer(indexData));
-            indexData.setYearHighToLatestDiffPer(getDeltaPercent(indexData.getYearHigh(), indexData.getLast()));
-            indexData.setLatestToLastWeekDiffPer(getLatestToLastWeekDiffPer(indexData));
+        for (NseIndexData nseIndexData : allIndices.getData()) {
+            nseIndexData.setProcessedIndex(removeHypnUnderScorSpcSecIndAndGetLowerCase(nseIndexData.getIndex()));
+            nseIndexData.setProcessedIndexSymbol(removeHypnUnderScorSpcSecIndAndGetLowerCase(nseIndexData.getIndex()));
+            nseIndexData.setYearHighToYearLowDiffPer(getYearHighToYearLowDiffPer(nseIndexData));
+            nseIndexData.setLatestToYearLowDiffPer(getLatestToYearLowDiffPer(nseIndexData));
+            nseIndexData.setYearHighToLatestDiffPer(getDeltaPercent(nseIndexData.getYearHigh(), nseIndexData.getLast()));
+            nseIndexData.setLatestToLastWeekDiffPer(getLatestToLastWeekDiffPer(nseIndexData));
         }
     }
 
-    private Double getLatestToLastWeekDiffPer(IndexData indexData) {
-        return getDeltaPercent(indexData.getLast(), indexData.getOneWeekAgoVal());
+    private Double getLatestToLastWeekDiffPer(NseIndexData nseIndexData) {
+        return getDeltaPercent(nseIndexData.getLast(), nseIndexData.getOneWeekAgoVal());
     }
 
-    private Double getYearLowToYearHighDiffPer(IndexData indexData) {
-        return getDeltaPercent(indexData.getYearHigh(), indexData.getYearLow());
+    private Double getYearHighToYearLowDiffPer(NseIndexData nseIndexData) {
+        return getDeltaPercent(nseIndexData.getYearHigh(), nseIndexData.getYearLow());
     }
 
-    private Double getLatestToYearLowDiffPer(IndexData indexData) {
-        return getDeltaPercent(indexData.getLast(), indexData.getYearLow());
+    private Double getLatestToYearLowDiffPer(NseIndexData nseIndexData) {
+        return getDeltaPercent(nseIndexData.getLast(), nseIndexData.getYearLow());
     }
 
     private void sort(NseAllIndicesResponse allIndices) {
         Collections.sort(allIndices.getData(), (ind1, ind2) -> {
             int diff = Double.compare(ind1.getLatestToYearLowDiffPer(), ind2.getLatestToYearLowDiffPer());
             if (ZERO_D.equals(diff)) {
-                diff = Double.compare(ind2.getYearLowToYearHighDiffPer(), ind1.getYearLowToYearHighDiffPer());
+                diff = Double.compare(ind2.getYearHighToYearLowDiffPer(), ind1.getYearHighToYearLowDiffPer());
             }
             if (ZERO_D.equals(diff) && ind1.getPe() != null && ind2.getPe() != null) {
                 diff = Double.compare(ind1.getPe(), ind2.getPe());
@@ -121,7 +121,7 @@ public class StockService {
             return null;
         }
         nseAllIndicesResponse.setData(nseAllIndicesResponse.getData().stream()
-                .filter(indexData -> isInvestableIndex(indexData))
+                .filter(nseIndexData -> isInvestableIndex(nseIndexData))
                 .collect(Collectors.toList()));
         //PE(Price/Earning ratio) for, Undervalue: <16 for nifty & <20 for sector. fair: 16-22 for nifty
         //PB(Price/Booking ratio) for, deep value: <2.5. fair: <=3.5
@@ -129,19 +129,19 @@ public class StockService {
         return nseAllIndicesResponse;
     }
 
-    private boolean isInvestableIndex(IndexData indexData) {
-        return (indexData != null
-                && StringUtils.isNotEmpty(indexData.getDate365dAgo())
-                && indexData.getYearLow() != null && indexData.getYearLow() > ZERO_D
-                && indexData.getYearHigh() != null && indexData.getYearHigh() > ZERO_D
-                && indexData.getOneYearAgoVal() != null && indexData.getOneYearAgoVal() > ZERO_D
-                && indexData.getYearHigh() > indexData.getOneYearAgoVal()
-                && indexData.getLatestToYearLowDiffPer() != null && indexData.getLatestToYearLowDiffPer() < 18D//Ideally indexData.getLatestToYearLowDiffPer() < 12D
-                && indexData.getYearLowToYearHighDiffPer() != null && indexData.getYearLowToYearHighDiffPer() > 10D //Yearly 10% change
-                && indexData.getYearHighToLatestDiffPer() != null && indexData.getYearHighToLatestDiffPer() > 4D//Makes sure we dont buy at year high
-                && indexData.getPe() != null && indexData.getPe() <= 22D
-                && indexData.getPb() != null && indexData.getPb() <= 3.5D
-                && indexData.getDy() != null && indexData.getDy() >= 1.2D);
+    private boolean isInvestableIndex(NseIndexData nseIndexData) {
+        return (nseIndexData != null
+                && StringUtils.isNotEmpty(nseIndexData.getDate365dAgo())
+                && nseIndexData.getYearLow() != null && nseIndexData.getYearLow() > ZERO_D
+                && nseIndexData.getYearHigh() != null && nseIndexData.getYearHigh() > ZERO_D
+                && nseIndexData.getOneYearAgoVal() != null && nseIndexData.getOneYearAgoVal() > ZERO_D
+                && nseIndexData.getYearHigh() > nseIndexData.getOneYearAgoVal()
+                && nseIndexData.getLatestToYearLowDiffPer() != null && nseIndexData.getLatestToYearLowDiffPer() < 12D//Ideally nseIndexData.getLatestToYearLowDiffPer() < 12D
+                && nseIndexData.getYearHighToYearLowDiffPer() != null && nseIndexData.getYearHighToYearLowDiffPer() > 10D //Yearly 10% change
+                && nseIndexData.getYearHighToLatestDiffPer() != null && nseIndexData.getYearHighToLatestDiffPer() > 4D//Makes sure we dont buy at year high
+                && nseIndexData.getPe() != null && nseIndexData.getPe() <= 22D
+                && nseIndexData.getPb() != null && nseIndexData.getPb() <= 3.5D
+                && nseIndexData.getDy() != null && nseIndexData.getDy() >= 1.2D);
     }
 
     /**
@@ -243,12 +243,12 @@ public class StockService {
             etf.setProcessedcompanyName(removeHypnUnderScorSpcSecIndAndGetLowerCase(etf.getCompanyName()));
             etf.setNavToMarketLtPDelta(getDelta(etf.getLtP(), etf.getNav()));
             etf.setNavToMarketLtPDeltaPercent(getDeltaPercent(etf.getNav(), etf.getLtP()));
-            etf.setYearLowToYearHighDiffPer(getYearLowToYearHighDiffPer(etf));
+            etf.setYearHighToYearLowDiffPer(getYearHighToYearLowDiffPer(etf));
             etf.setLatestToYearLowDiffPer(getLatestToYearLowDiffPer(etf));//nearWKL*-1
         }
     }
 
-    private Double getYearLowToYearHighDiffPer(EtfData etf) {
+    private Double getYearHighToYearLowDiffPer(EtfData etf) {
         return getDeltaPercent(etf.getWkhi(), etf.getWklo());
     }
 
@@ -280,7 +280,7 @@ public class StockService {
                 diff = Double.compare(etf1.getLatestToYearLowDiffPer(), etf2.getLatestToYearLowDiffPer());
             }
             if (ZERO_D.equals(diff)) {
-                diff = Double.compare(etf1.getYearLowToYearHighDiffPer(), etf2.getYearLowToYearHighDiffPer());
+                diff = Double.compare(etf1.getYearHighToYearLowDiffPer(), etf2.getYearHighToYearLowDiffPer());
             }
             if (ZERO_D.equals(diff) && etf1.getQty() != null && etf2.getQty() != null) {
                 diff = Double.compare(etf2.getQty(), etf1.getQty());
@@ -321,8 +321,8 @@ public class StockService {
     }
 
     public NseEtfResponse getInvestableEtfData(String cookie, String index, String indexSymbol) {
-        ProcessDto processDto = getProcessDto(cookie);
-        return processDto.getInvestableEtf();
+        OldProcessDto oldProcessDto = getProcessDto(cookie);
+        return oldProcessDto.getInvestableEtf();
         /*
         NseEtfResponse nseEtfResponse = getEtfData(cookie, index, indexSymbol);
         if (nseEtfResponse == null || CollectionUtils.isEmpty(nseEtfResponse.getData())) {
@@ -339,49 +339,49 @@ public class StockService {
         */
     }
 
-    private ProcessDto getProcessDto(String cookie) {
-        ProcessDto processDto = new ProcessDto();
+    private OldProcessDto getProcessDto(String cookie) {
+        OldProcessDto oldProcessDto = new OldProcessDto();
 
-        processDto.setAllIndices(getAllIndices(cookie));
-        setInvestableIndices(processDto);
+        oldProcessDto.setAllIndices(getAllIndices(cookie));
+        setInvestableIndices(oldProcessDto);
 
-        setEtfWithIndexData(cookie, processDto);
-        setInvestableEtf(processDto);
+        setEtfWithIndexData(cookie, oldProcessDto);
+        setInvestableEtf(oldProcessDto);
 
-        return processDto;
+        return oldProcessDto;
     }
 
-    private void setInvestableIndices(ProcessDto processDto) {
-        if (processDto == null || processDto.getAllIndices() == null) {
+    private void setInvestableIndices(OldProcessDto oldProcessDto) {
+        if (oldProcessDto == null || oldProcessDto.getAllIndices() == null) {
             return;
         }
-        processDto.setInvestableIndices(new NseAllIndicesResponse(getInvestableIndicesData(processDto)
-                , processDto.getAllIndices().getTimestamp()
-                , processDto.getAllIndices().getAdvances()
-                , processDto.getAllIndices().getDeclines()
-                , processDto.getAllIndices().getUnchanged()
-                , processDto.getAllIndices().getDates()
+        oldProcessDto.setInvestableIndices(new NseAllIndicesResponse(getInvestableIndicesData(oldProcessDto)
+                , oldProcessDto.getAllIndices().getTimestamp()
+                , oldProcessDto.getAllIndices().getAdvances()
+                , oldProcessDto.getAllIndices().getDeclines()
+                , oldProcessDto.getAllIndices().getUnchanged()
+                , oldProcessDto.getAllIndices().getDates()
         ));
     }
 
-    private List<IndexData> getInvestableIndicesData(ProcessDto processDto) {
-        if (processDto == null || processDto.getAllIndices() == null
-                || CollectionUtils.isEmpty(processDto.getAllIndices().getData())) {
+    private List<NseIndexData> getInvestableIndicesData(OldProcessDto oldProcessDto) {
+        if (oldProcessDto == null || oldProcessDto.getAllIndices() == null
+                || CollectionUtils.isEmpty(oldProcessDto.getAllIndices().getData())) {
             return null;
         }
-        return processDto.getAllIndices().getData().stream()
-                .filter(indexData -> isInvestableIndex(indexData))
+        return oldProcessDto.getAllIndices().getData().stream()
+                .filter(nseIndexData -> isInvestableIndex(nseIndexData))
                 .collect(Collectors.toList());
     }
 
-    private void setEtfWithIndexData(String cookie, ProcessDto processDto) {
+    private void setEtfWithIndexData(String cookie, OldProcessDto oldProcessDto) {
         NseEtfResponse nseEtfResponse = nseClient.getEtfData(cookie);
-        deriveMetricsWithInd(nseEtfResponse, processDto);
+        deriveMetricsWithInd(nseEtfResponse, oldProcessDto);
         sort(nseEtfResponse);
-        processDto.setAllEtf(nseEtfResponse);
+        oldProcessDto.setAllEtf(nseEtfResponse);
     }
 
-    private void deriveMetricsWithInd(NseEtfResponse nseEtfResponse, ProcessDto processDto) {
+    private void deriveMetricsWithInd(NseEtfResponse nseEtfResponse, OldProcessDto oldProcessDto) {
         if (nseEtfResponse == null || CollectionUtils.isEmpty(nseEtfResponse.getData())) {
             return;
         }
@@ -390,71 +390,71 @@ public class StockService {
             etf.setProcessedcompanyName(removeHypnUnderScorSpcSecIndAndGetLowerCase(etf.getCompanyName()));
             etf.setNavToMarketLtPDelta(getDelta(etf.getLtP(), etf.getNav()));
             etf.setNavToMarketLtPDeltaPercent(getDeltaPercent(etf.getNav(), etf.getLtP()));
-            etf.setYearLowToYearHighDiffPer(getYearLowToYearHighDiffPer(etf));
+            etf.setYearHighToYearLowDiffPer(getYearHighToYearLowDiffPer(etf));
             etf.setLatestToYearLowDiffPer(getLatestToYearLowDiffPer(etf));//nearWKL*-1
-            setIndDataInEtf(etf, processDto);
+            setIndDataInEtf(etf, oldProcessDto);
         }
     }
 
-    private void setIndDataInEtf(EtfData etf, ProcessDto processDto) {
-        if (etf == null || processDto == null || processDto.getAllIndices() == null
-                || CollectionUtils.isEmpty(processDto.getAllIndices().getData())) {
+    private void setIndDataInEtf(EtfData etf, OldProcessDto oldProcessDto) {
+        if (etf == null || oldProcessDto == null || oldProcessDto.getAllIndices() == null
+                || CollectionUtils.isEmpty(oldProcessDto.getAllIndices().getData())) {
             return;
         }
-        for (IndexData indexData : processDto.getAllIndices().getData()) {
-            if (isEtfOfProvidedIndex(indexData.getProcessedIndex(), indexData.getProcessedIndexSymbol(), etf)) {
-                etf.setIndexData(indexData);
+        for (NseIndexData nseIndexData : oldProcessDto.getAllIndices().getData()) {
+            if (isEtfOfProvidedIndex(nseIndexData.getProcessedIndex(), nseIndexData.getProcessedIndexSymbol(), etf)) {
+                etf.setNseIndexData(nseIndexData);
                 break;
             }
         }
     }
 
-    private void setInvestableEtf(ProcessDto processDto) {
-        if (processDto == null || processDto.getAllEtf() == null || CollectionUtils.isEmpty(processDto.getAllEtf().getData())) {
+    private void setInvestableEtf(OldProcessDto oldProcessDto) {
+        if (oldProcessDto == null || oldProcessDto.getAllEtf() == null || CollectionUtils.isEmpty(oldProcessDto.getAllEtf().getData())) {
             return;
         }
 
-        processDto.setInvestableEtf(new NseEtfResponse(processDto.getAllEtf().getTimestamp()
-                        , getInvestableEtfData(processDto)//, getInvestableEtfData(processDto.getAllEtf().getData())
-                        , processDto.getAllEtf().getAdvances()
-                        , processDto.getAllEtf().getDeclines()
-                        , processDto.getAllEtf().getUnchanged()
-                        , processDto.getAllEtf().getNavDate()
-                        , processDto.getAllEtf().getTotalTradedValue()
-                        , processDto.getAllEtf().getTotalTradedVolume()
-                        , processDto.getAllEtf().getMarketStatus()
+        oldProcessDto.setInvestableEtf(new NseEtfResponse(oldProcessDto.getAllEtf().getTimestamp()
+                        , getInvestableEtfData(oldProcessDto)//, getInvestableEtfData(oldProcessDto.getAllEtf().getData())
+                        , oldProcessDto.getAllEtf().getAdvances()
+                        , oldProcessDto.getAllEtf().getDeclines()
+                        , oldProcessDto.getAllEtf().getUnchanged()
+                        , oldProcessDto.getAllEtf().getNavDate()
+                        , oldProcessDto.getAllEtf().getTotalTradedValue()
+                        , oldProcessDto.getAllEtf().getTotalTradedVolume()
+                        , oldProcessDto.getAllEtf().getMarketStatus()
                 )
 
         );
     }
 
-    private List<EtfData> getInvestableEtfData(ProcessDto processDto) {
-        if (processDto == null || processDto.getAllEtf() == null
-                || CollectionUtils.isEmpty(processDto.getAllEtf().getData())) {
+    private List<EtfData> getInvestableEtfData(OldProcessDto oldProcessDto) {
+        if (oldProcessDto == null || oldProcessDto.getAllEtf() == null
+                || CollectionUtils.isEmpty(oldProcessDto.getAllEtf().getData())) {
             return null;
         }
-        return processDto.getAllEtf().getData().stream()
+        return oldProcessDto.getAllEtf().getData().stream()
                 .filter(etfData -> etfData != null
                         && StringUtils.isNotEmpty(etfData.getDate365dAgo())
-                        && etfData.getQty() != null && etfData.getQty() > 10000L //ideally, etfData.getQty() > 20,000L
-                        && (isInvestableIndex(processDto, etfData) || isPerformingEtf(etfData)))
+                        && etfData.getQty() != null && etfData.getQty() > 20000L //ideally, etfData.getQty() > 20,000L
+                        && (isInvestableIndex(oldProcessDto, etfData) || isPerformingEtf(etfData)))
                 .collect(Collectors.toList());
     }
 
-    private boolean isInvestableIndex(ProcessDto processDto, EtfData etfData) {
-        if (etfData == null || etfData.getIndexData() == null
-                || processDto == null || processDto.getInvestableIndices() == null
-                || CollectionUtils.isEmpty(processDto.getInvestableIndices().getData())) {
+    private boolean isInvestableIndex(OldProcessDto oldProcessDto, EtfData etfData) {
+        if (etfData == null || etfData.getNseIndexData() == null
+                || oldProcessDto == null || oldProcessDto.getInvestableIndices() == null
+                || CollectionUtils.isEmpty(oldProcessDto.getInvestableIndices().getData())) {
             return false;
         }
-        return processDto.getInvestableIndices().getData().contains(etfData.getIndexData());
+        return oldProcessDto.getInvestableIndices().getData().contains(etfData.getNseIndexData());
     }
 
     private List<EtfData> getInvestableEtfData(List<EtfData> data) {
         return data.stream()
                 .filter(etfData -> etfData != null
                         && StringUtils.isNotEmpty(etfData.getDate365dAgo())
-                        && (isInvestableIndex(etfData.getIndexData()) || isPerformingEtf(etfData)))
+                        && (isInvestableIndex(etfData.getNseIndexData()) || isPerformingEtf(etfData)))
                 .collect(Collectors.toList());
     }
 
@@ -462,8 +462,8 @@ public class StockService {
         if (indices == null || CollectionUtils.isEmpty(indices.getData())) {
             return false;
         }
-        for (IndexData indexData : indices.getData()) {
-            if (isEtfOfProvidedIndex(indexData.getProcessedIndex(), indexData.getProcessedIndexSymbol(), etfData)) {
+        for (NseIndexData nseIndexData : indices.getData()) {
+            if (isEtfOfProvidedIndex(nseIndexData.getProcessedIndex(), nseIndexData.getProcessedIndexSymbol(), etfData)) {
                 return true;
             }
         }
@@ -472,9 +472,9 @@ public class StockService {
 
     private boolean isPerformingEtf(EtfData etfData) {
         return (etfData != null
-                && etfData.getLatestToYearLowDiffPer() != null && etfData.getLatestToYearLowDiffPer() < 18D //ideally, etfData.getLatestToYearLowDiffPer() < 12D
-                && etfData.getYearLowToYearHighDiffPer() != null && etfData.getYearLowToYearHighDiffPer() > 10D //Atleast 10% changes in year
+                && etfData.getLatestToYearLowDiffPer() != null && etfData.getLatestToYearLowDiffPer() < 12D //ideally, etfData.getLatestToYearLowDiffPer() < 12D
+                && etfData.getYearHighToYearLowDiffPer() != null && etfData.getYearHighToYearLowDiffPer() > 10D //Atleast 10% changes in year
                 && etfData.getNearWKH() != null && etfData.getNearWKH() > 4D//Makes sure we dont buy at year high
-                && etfData.getNavToMarketLtPDeltaPercent() != null && etfData.getNavToMarketLtPDeltaPercent() > -0.2D);//not buying too expensive from NAV
+                && etfData.getNavToMarketLtPDeltaPercent() != null && etfData.getNavToMarketLtPDeltaPercent() > -0.1D);//not buying too expensive from NAV
     }
 }

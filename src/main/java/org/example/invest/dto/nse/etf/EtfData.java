@@ -1,4 +1,4 @@
-package org.example.invest.dto;
+package org.example.invest.dto.nse.etf;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.apache.commons.lang3.StringUtils;
+import org.example.invest.dto.bse.index.BseRealTimeData;
+import org.example.invest.dto.nse.index.NseIndexData;
 
 /**
  * DTO for individual ETF data in NSE ETF API response
@@ -55,8 +57,8 @@ public class EtfData {
     @JsonProperty("latestToYearLowDiffPer")
     private Double latestToYearLowDiffPer;
 
-    @JsonProperty("yearLowToYearHighDiffPer")
-    private Double yearLowToYearHighDiffPer;
+    @JsonProperty("yearHighToYearLowDiffPer")
+    private Double yearHighToYearLowDiffPer;
 
     @JsonProperty("nearWKH")
     private Double nearWKH;
@@ -106,8 +108,11 @@ public class EtfData {
     @JsonProperty("trdVal")
     private String trdVal;
 
-    @JsonProperty("indexData")
-    private IndexData indexData;
+    @JsonProperty("nseIndexData")
+    private NseIndexData nseIndexData;
+
+    @JsonProperty("bseIndexData")
+    private BseRealTimeData bseIndexData;
 
     @JsonProperty("meta")
     private EtfMeta meta;

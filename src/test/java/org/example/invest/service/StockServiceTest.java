@@ -2,8 +2,8 @@ package org.example.invest.service;
 
 import org.example.invest.client.NseClient;
 import org.example.invest.dto.DateInfo;
-import org.example.invest.dto.IndexData;
-import org.example.invest.dto.NseAllIndicesResponse;
+import org.example.invest.dto.nse.index.NseAllIndicesResponse;
+import org.example.invest.dto.nse.index.NseIndexData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,7 +33,7 @@ public class StockServiceTest {
     private NseClient nseClient;
 
     private NseAllIndicesResponse mockResponse;
-    private IndexData mockIndexData;
+    private NseIndexData mockIndexData;
     private DateInfo mockDateInfo;
 
     @BeforeEach
@@ -46,7 +46,7 @@ public class StockServiceTest {
         mockDateInfo.setOneYearAgo("2022-09-28");
 
         // Setup mock IndexData
-        mockIndexData = new IndexData();
+        mockIndexData = new NseIndexData();
         mockIndexData.setKey("NIFTY 50");
         mockIndexData.setIndex("NIFTY 50");
         mockIndexData.setIndexSymbol("NIFTY 50");

@@ -1,7 +1,13 @@
-package org.example.invest.dto;
+package org.example.invest.dto.nse.etf;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import org.example.invest.dto.MarketStatus;
 
 import java.util.List;
 

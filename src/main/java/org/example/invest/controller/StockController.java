@@ -1,7 +1,7 @@
 package org.example.invest.controller;
 
-import org.example.invest.dto.NseAllIndicesResponse;
-import org.example.invest.dto.NseEtfResponse;
+import org.example.invest.dto.nse.index.NseAllIndicesResponse;
+import org.example.invest.dto.nse.etf.NseEtfResponse;
 import org.example.invest.service.StockService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;

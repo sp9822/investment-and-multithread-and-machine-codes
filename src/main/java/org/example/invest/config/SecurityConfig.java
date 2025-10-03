@@ -17,20 +17,23 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-            .csrf(csrf -> csrf.disable()) // Disable CSRF for API endpoints
-            .authorizeHttpRequests(authz -> authz
-                // Allow public access to stocks API endpoints
-                .requestMatchers("/api/stocks/**").permitAll()
-                // Allow public access to Swagger/OpenAPI documentation
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-                // Allow public access to health check endpoints
-                .requestMatchers("/actuator/**").permitAll()
-                // Require authentication for all other endpoints
-                .anyRequest().authenticated()
-            )
-            .httpBasic(httpBasic -> httpBasic.disable()) // Disable basic auth
-            .formLogin(formLogin -> formLogin.disable()); // Disable form login
+        http.csrf(csrf -> csrf.disable()) // Disable CSRF for API endpoints
+                .authorizeHttpRequests(authz -> authz
+                        // Allow public access to stocks API endpoints
+                        .requestMatchers("/api/stocks/**").permitAll()
+                        //Allow bse APIs
+                        .requestMatchers("/bse/**").permitAll()
+                        //Allow nse APIs
+                        .requestMatchers("/nse/**").permitAll()
+                        // Allow public access to Swagger/OpenAPI documentation
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+                        // Allow public access to health check endpoints
+                        .requestMatchers("/actuator/**").permitAll()
+                        // Require authentication for all other endpoints
+                        .anyRequest().authenticated()
+                )
+                .httpBasic(httpBasic -> httpBasic.disable()) // Disable basic auth
+                .formLogin(formLogin -> formLogin.disable()); // Disable form login
 
         return http.build();
     }

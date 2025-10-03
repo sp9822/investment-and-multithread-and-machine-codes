@@ -1,6 +1,5 @@
 package org.example.invest.example;
 
-import org.example.invest.dto.NseEtfResponse;
 import org.example.invest.service.StockService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

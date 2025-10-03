@@ -1,6 +1,6 @@
 package org.example.invest.example;
 
-import org.example.invest.dto.NseAllIndicesResponse;
+import org.example.invest.dto.nse.index.NseAllIndicesResponse;
 import org.example.invest.service.StockService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;

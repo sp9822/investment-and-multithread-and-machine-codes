@@ -1,4 +1,4 @@
-package org.example.invest.dto;
+package org.example.invest.dto.nse.index;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.example.invest.dto.DateInfo;
 
 import java.util.List;
 
@@ -22,7 +23,7 @@ import java.util.List;
 public class NseAllIndicesResponse {
 
     @JsonProperty("data")
-    private List<IndexData> data;
+    private List<NseIndexData> data;
 
     @JsonProperty("timestamp")
     private String timestamp;

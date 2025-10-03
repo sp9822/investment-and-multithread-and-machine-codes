@@ -1,12 +1,14 @@
 package org.example.invest.service;
 
-import org.example.invest.dto.NseAllIndicesResponse;
+import org.example.invest.dto.nse.index.NseAllIndicesResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Integration test for StockService that tests real NseClient calls
@@ -14,8 +16,8 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 @SpringBootTest
 @TestPropertySource(properties = {
-    "logging.level.org.example.invest=DEBUG",
-    "feign.client.config.nse-client.loggerLevel=FULL"
+        "logging.level.org.example.invest=DEBUG",
+        "feign.client.config.nse-client.loggerLevel=FULL"
 })
 public class StockServiceIntegrationTest {
 
@@ -34,18 +36,18 @@ public class StockServiceIntegrationTest {
         assertNotNull(result, "Response should not be null");
         assertNotNull(result.getData(), "Data list should not be null");
         assertFalse(result.getData().isEmpty(), "Data list should not be empty");
-        
+
         // Verify response structure
         assertNotNull(result.getTimestamp(), "Timestamp should not be null");
         assertNotNull(result.getAdvances(), "Advances count should not be null");
         assertNotNull(result.getDeclines(), "Declines count should not be null");
         assertNotNull(result.getUnchanged(), "Unchanged count should not be null");
-        
+
         // Verify data integrity
         assertTrue(result.getAdvances() >= 0, "Advances should be non-negative");
         assertTrue(result.getDeclines() >= 0, "Declines should be non-negative");
         assertTrue(result.getUnchanged() >= 0, "Unchanged should be non-negative");
-        
+
         // Verify first index data
         var firstIndex = result.getData().get(0);
         assertNotNull(firstIndex.getIndex(), "Index name should not be null");
@@ -78,7 +80,7 @@ public class StockServiceIntegrationTest {
         assertNotNull(result, "Response should not be null");
         assertNotNull(result.getData(), "Data list should not be null");
         assertFalse(result.getData().isEmpty(), "Data list should not be empty");
-        
+
         // Verify response structure
         assertNotNull(result.getTimestamp(), "Timestamp should not be null");
     }
@@ -116,15 +118,15 @@ public class StockServiceIntegrationTest {
 
         // Assert
         assertNotNull(result, "Response should not be null");
-        
+
         if (result.getData() != null && !result.getData().isEmpty()) {
             var firstIndex = result.getData().get(0);
-            
+
             // Verify required fields are present
             assertNotNull(firstIndex.getIndex(), "Index name should not be null");
             assertNotNull(firstIndex.getIndexSymbol(), "Index symbol should not be null");
             assertNotNull(firstIndex.getLast(), "Last price should not be null");
-            
+
             // Verify numeric fields are reasonable
             assertTrue(firstIndex.getLast() > 0, "Last price should be positive");
             if (firstIndex.getOpen() != null) {
