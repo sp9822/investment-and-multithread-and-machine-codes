@@ -1,9 +1,8 @@
 package org.example.invest.mapper;
 
 import org.apache.commons.lang3.StringUtils;
-import org.example.invest.dto.BseDto;
-import org.example.invest.dto.NseDto;
-import org.example.invest.dto.bse.etf.BseEtfData;
+import org.example.invest.dto.bse.BseDto;
+import org.example.invest.dto.nse.NseDto;
 import org.example.invest.dto.bse.index.BseRealTimeData;
 import org.example.invest.dto.nse.etf.EtfData;
 import org.example.invest.dto.nse.etf.NseEtfResponse;
@@ -16,7 +15,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;

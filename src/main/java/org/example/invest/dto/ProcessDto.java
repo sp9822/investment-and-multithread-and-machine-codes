@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.example.invest.dto.bse.BseDto;
+import org.example.invest.dto.nse.NseDto;
 
 @Getter
 @Setter

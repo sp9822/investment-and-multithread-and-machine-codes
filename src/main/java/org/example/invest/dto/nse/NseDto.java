@@ -1,4 +1,4 @@
-package org.example.invest.dto;
+package org.example.invest.dto.nse;
 
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;

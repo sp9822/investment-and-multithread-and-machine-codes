@@ -1,4 +1,4 @@
-package org.example.invest.dto;
+package org.example.invest.dto.bse;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;

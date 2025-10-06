@@ -1,7 +1,7 @@
 package org.example.invest.mapper;
 
-import org.example.invest.dto.BseDto;
-import org.example.invest.dto.NseDto;
+import org.example.invest.dto.bse.BseDto;
+import org.example.invest.dto.nse.NseDto;
 import org.example.invest.dto.ProcessDto;
 import org.example.invest.dto.request.RequestBean;
 import org.springframework.beans.factory.annotation.Autowired;
