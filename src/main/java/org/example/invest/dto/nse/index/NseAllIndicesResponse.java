@@ -1,5 +1,6 @@
 package org.example.invest.dto.nse.index;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -20,6 +21,7 @@ import java.util.List;
 @NoArgsConstructor
 @ToString
 @EqualsAndHashCode
+//@JsonInclude(JsonInclude.Include.NON_NULL)
 public class NseAllIndicesResponse {
 
     @JsonProperty("data")

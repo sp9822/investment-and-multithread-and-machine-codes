@@ -3,6 +3,7 @@ package org.example.invest.mapper;
 import org.apache.commons.lang3.StringUtils;
 import org.example.invest.dto.BseDto;
 import org.example.invest.dto.NseDto;
+import org.example.invest.dto.bse.etf.BseEtfData;
 import org.example.invest.dto.bse.index.BseRealTimeData;
 import org.example.invest.dto.nse.etf.EtfData;
 import org.example.invest.dto.nse.etf.NseEtfResponse;
@@ -127,11 +128,19 @@ public class NseDtoMapper {
     }
 
     public void addAllInvestableEtfAsPerBseIndices(NseDto nseDto, BseDto bseDto) {
-        if (nseDto == null || nseDto.getInvestableEtf() == null || nseDto.getAllEtf() == null || bseDto == null) {
+        if (nseDto == null || nseDto.getAllEtf() == null || CollectionUtils.isEmpty(nseDto.getAllEtf().getData())
+                || bseDto == null || CollectionUtils.isEmpty(bseDto.getInvestableIndices())) {
             return;
+        }
+        if (nseDto.getInvestableEtf() == null) {
+            nseDto.setInvestableEtf(new NseEtfResponse());
+        }
+        if (nseDto.getInvestableEtf().getData() == null) {
+            nseDto.getInvestableEtf().setData(new ArrayList<>());
         }
         nseDto.getInvestableEtf().getData().addAll(getAllInvestableEtfAsPerBseIndices(nseDto.getAllEtf().getData()
                 , bseDto.getInvestableIndices()));
+        nseDto.getInvestableEtf().setData(removeDuplicates(nseDto.getInvestableEtf().getData()));
     }
 
     private List<EtfData> getAllInvestableEtfAsPerBseIndices(List<EtfData> allEtfDataListdata, List<BseRealTimeData> investableBseIndices) {
@@ -161,4 +170,13 @@ public class NseDtoMapper {
         return false;
     }
 
+    private List<EtfData> removeDuplicates(List<EtfData> nseEtfDataList) {
+        List<EtfData> distBseEtfDataList = new ArrayList<>();
+        for (EtfData nseEtfData : nseEtfDataList) {
+            if (!distBseEtfDataList.contains(nseEtfData)) {
+                distBseEtfDataList.add(nseEtfData);
+            }
+        }
+        return distBseEtfDataList;
+    }
 }

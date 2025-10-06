@@ -9,6 +9,7 @@ import lombok.Setter;
 import lombok.ToString;
 import org.example.invest.dto.bse.index.BseMktCapBoardResponse;
 import org.example.invest.dto.bse.index.BseRealTimeData;
+import org.example.invest.dto.bse.etf.BseEtfResponse;
 
 import java.util.List;
 
@@ -24,6 +25,9 @@ public class BseDto {
     @JsonProperty("investableIndices")
     private List<BseRealTimeData> investableIndices;
 
-    //allEtf;
-    //investableEtf;
+    @JsonProperty("allEtf")
+    private BseEtfResponse allEtf;
+
+    @JsonProperty("investableEtf")
+    private BseEtfResponse investableEtf;
 }

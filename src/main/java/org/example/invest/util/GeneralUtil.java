@@ -24,7 +24,15 @@ public class GeneralUtil {
         subStr = subStr.replaceAll("traded", "");
         subStr = subStr.replaceAll("trade", "");
         subStr = subStr.replaceAll("fund", "");
+        subStr = subStr.replaceAll("india", "");
         return subStr;
+    }
+
+    public Double getDelta(Double val1, Double val2) {
+        if (val1 == null || val2 == null) {
+            return ZERO_D;
+        }
+        return val1 - val2;
     }
 
     public Double getDeltaPercent(Double numerator, Double denomerator) {

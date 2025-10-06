@@ -1,4 +1,4 @@
-package org.example.invest.dto.nse.etf;
+package org.example.invest.dto.bse.etf;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -8,12 +8,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.example.invest.dto.MarketStatus;
 
 import java.util.List;
 
 /**
- * DTO for NSE ETF API response
+ * DTO for BSE ETF API response
  */
 @Getter
 @Setter
@@ -22,13 +21,16 @@ import java.util.List;
 @ToString
 @EqualsAndHashCode
 //@JsonInclude(JsonInclude.Include.NON_NULL)
-public class NseEtfResponse {
+public class BseEtfResponse {
 
     @JsonProperty("timestamp")
     private String timestamp;
 
     @JsonProperty("data")
-    private List<EtfData> data;
+    private List<BseEtfData> data;
+
+    @JsonProperty("totalCount")
+    private Integer totalCount;
 
     @JsonProperty("advances")
     private Integer advances;
@@ -39,15 +41,30 @@ public class NseEtfResponse {
     @JsonProperty("unchanged")
     private Integer unchanged;
 
-    @JsonProperty("navDate")
-    private String navDate;
-
     @JsonProperty("totalTradedValue")
     private Double totalTradedValue;
 
     @JsonProperty("totalTradedVolume")
     private Long totalTradedVolume;
 
+    @JsonProperty("totalMarketCap")
+    private Double totalMarketCap;
+
     @JsonProperty("marketStatus")
-    private MarketStatus marketStatus;
+    private String marketStatus;
+
+    @JsonProperty("lastUpdated")
+    private String lastUpdated;
+
+    @JsonProperty("source")
+    private String source;
+
+    @JsonProperty("success")
+    private Boolean success;
+
+    @JsonProperty("message")
+    private String message;
+
+    @JsonProperty("errorCode")
+    private String errorCode;
 }

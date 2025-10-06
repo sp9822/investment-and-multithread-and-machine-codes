@@ -4,6 +4,7 @@ import org.example.invest.dto.bse.index.BseMktCapBoardResponse;
 import org.example.invest.dto.bse.index.BseAsOnData;
 import org.example.invest.dto.bse.index.BseEodData;
 import org.example.invest.dto.bse.index.BseRealTimeData;
+import org.example.invest.dto.bse.etf.BseEtfResponse;
 import org.example.invest.dto.request.RequestBean;
 import org.example.invest.mapper.ProcessDtoMapper;
 import org.example.invest.service.impl.BseServiceImpl;
@@ -156,15 +157,13 @@ public class BseController {
         return processDtoMapper.getProcessDto(new RequestBean(cookie)).getBseDto().getInvestableIndices();
     }
 
-    /*
     @GetMapping("/etfs")
-    public NseEtfResponse getAllEtfs(@RequestHeader(value = "Cookie", required = false) String cookie) {
+    public BseEtfResponse getAllEtfs(@RequestHeader(value = "Cookie", required = false) String cookie) {
         return processDtoMapper.getProcessDto(new RequestBean(cookie)).getBseDto().getAllEtf();
     }
 
     @GetMapping("/investableEtfs")
-    public NseEtfResponse getInvestableEtfs(@RequestHeader(value = "Cookie", required = false) String cookie) {
+    public BseEtfResponse getInvestableEtfs(@RequestHeader(value = "Cookie", required = false) String cookie) {
         return processDtoMapper.getProcessDto(new RequestBean(cookie)).getBseDto().getInvestableEtf();
     }
-    */
 }

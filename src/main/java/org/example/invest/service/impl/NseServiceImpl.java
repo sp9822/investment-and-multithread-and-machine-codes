@@ -42,18 +42,11 @@ public class NseServiceImpl implements NseService {
         for (NseIndexData nseIndexData : allIndices.getData()) {
             nseIndexData.setProcessedIndex(generalUtil.removeHypnUnderScorSpcSecIndAndGetLowerCase(nseIndexData.getIndex()));
             nseIndexData.setProcessedIndexSymbol(generalUtil.removeHypnUnderScorSpcSecIndAndGetLowerCase(nseIndexData.getIndex()));
-            nseIndexData.setYearHighToYearLowDiffPer(getDeltaPercent(nseIndexData.getYearHigh(), nseIndexData.getYearLow()));
-            nseIndexData.setLatestToYearLowDiffPer(getDeltaPercent(nseIndexData.getLast(), nseIndexData.getYearLow()));
-            nseIndexData.setYearHighToLatestDiffPer(getDeltaPercent(nseIndexData.getYearHigh(), nseIndexData.getLast()));
-            nseIndexData.setLatestToLastWeekDiffPer(getDeltaPercent(nseIndexData.getLast(), nseIndexData.getOneWeekAgoVal()));
+            nseIndexData.setYearHighToYearLowDiffPer(generalUtil.getDeltaPercent(nseIndexData.getYearHigh(), nseIndexData.getYearLow()));
+            nseIndexData.setLatestToYearLowDiffPer(generalUtil.getDeltaPercent(nseIndexData.getLast(), nseIndexData.getYearLow()));
+            nseIndexData.setYearHighToLatestDiffPer(generalUtil.getDeltaPercent(nseIndexData.getYearHigh(), nseIndexData.getLast()));
+            nseIndexData.setLatestToLastWeekDiffPer(generalUtil.getDeltaPercent(nseIndexData.getLast(), nseIndexData.getOneWeekAgoVal()));
         }
-    }
-
-    private Double getDeltaPercent(Double numerator, Double denomerator) {
-        if (numerator == null || denomerator == null || ZERO_D.equals(denomerator)) {
-            return Double.MAX_VALUE;
-        }
-        return ((numerator / denomerator * HUNDREAD_D) - HUNDREAD_D);
     }
 
     private void sort(NseAllIndicesResponse allIndices) {
@@ -102,19 +95,12 @@ public class NseServiceImpl implements NseService {
         for (EtfData etf : nseEtfResponse.getData()) {
             etf.setProcessedAssets(generalUtil.removeHypnUnderScorSpcSecIndAndGetLowerCase(etf.getAssets()));
             etf.setProcessedcompanyName(generalUtil.removeHypnUnderScorSpcSecIndAndGetLowerCase(etf.getCompanyName()));
-            etf.setNavToMarketLtPDelta(getDelta(etf.getLtP(), etf.getNav()));
-            etf.setNavToMarketLtPDeltaPercent(getDeltaPercent(etf.getNav(), etf.getLtP()));
-            etf.setYearHighToYearLowDiffPer(getDeltaPercent(etf.getWkhi(), etf.getWklo()));
-            etf.setLatestToYearLowDiffPer(getDeltaPercent(etf.getLtP(), etf.getWklo()));//nearWKL*-1
+            etf.setNavToMarketLtPDelta(generalUtil.getDelta(etf.getLtP(), etf.getNav()));
+            etf.setNavToMarketLtPDeltaPercent(generalUtil.getDeltaPercent(etf.getNav(), etf.getLtP()));
+            etf.setYearHighToYearLowDiffPer(generalUtil.getDeltaPercent(etf.getWkhi(), etf.getWklo()));
+            etf.setLatestToYearLowDiffPer(generalUtil.getDeltaPercent(etf.getLtP(), etf.getWklo()));//nearWKL*-1
             setIndDataInEtf(etf, nseAllIndicesResponse);
         }
-    }
-
-    private Double getDelta(Double val1, Double val2) {
-        if (val1 == null || val2 == null) {
-            return ZERO_D;
-        }
-        return val1 - val2;
     }
 
     private void setIndDataInEtf(EtfData etf, NseAllIndicesResponse nseAllIndicesResponse) {

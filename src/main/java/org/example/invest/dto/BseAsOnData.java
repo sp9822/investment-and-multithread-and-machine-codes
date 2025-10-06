@@ -1,24 +1,19 @@
-package org.example.invest.dto.bse.index;
+package org.example.invest.dto;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-import org.example.invest.dto.IndexData;
 
 import java.time.LocalDateTime;
 
 /**
- * Data model for BSE RealTime index data
+ * Data model for BSE ASON (As On) index data
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode
-//@JsonInclude(JsonInclude.Include.NON_NULL)
-public class BseRealTimeData extends IndexData {
+public class BseAsOnData {
 
     @JsonProperty("ScripFlagCode")
     private Integer scripFlagCode;
@@ -26,23 +21,8 @@ public class BseRealTimeData extends IndexData {
     @JsonProperty("INDX_CD")
     private String indexCode;
 
-    @JsonProperty("Processed_INDX_CD")
-    private String processedIndexSymbol;
-
     @JsonProperty("IndexName")
     private String indexName;
-
-    @JsonProperty("Processed_IndexName")
-    private String processedIndex;
-
-    @JsonProperty("yearHighToLatestDiffPer")
-    private Double yearHighToLatestDiffPer;
-
-    @JsonProperty("latestToYearLowDiffPer")
-    private Double latestToYearLowDiffPer;
-
-    @JsonProperty("yearHighToYearLowDiffPer")
-    private Double yearHighToYearLowDiffPer;
 
     @JsonProperty("I_open")
     private Double open;
@@ -88,7 +68,4 @@ public class BseRealTimeData extends IndexData {
 
     @JsonProperty("WebURL")
     private String webUrl;
-
-    @JsonProperty("fundamentals")
-    private BseIndexFundamentals fundamentals;
 }

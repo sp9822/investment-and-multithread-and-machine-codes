@@ -1,11 +1,14 @@
 package org.example.invest.service.impl;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.example.invest.client.BseClient;
 import org.example.invest.dto.bse.index.BseMktCapBoardResponse;
 import org.example.invest.dto.bse.index.BseAsOnData;
 import org.example.invest.dto.bse.index.BseEodData;
 import org.example.invest.dto.bse.index.BseRealTimeData;
+import org.example.invest.dto.bse.etf.BseEtfResponse;
+import org.example.invest.dto.bse.etf.BseEtfData;
 import org.example.invest.service.BseService;
 import org.example.invest.util.GeneralUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -215,10 +218,16 @@ public class BseServiceImpl implements BseService {
                 && bseRealTimeData.getLatestToYearLowDiffPer() != null && bseRealTimeData.getLatestToYearLowDiffPer() < 12D//Ideally bseRealTimeData.getLatestToYearLowDiffPer() < 12D
                 && bseRealTimeData.getYearHighToYearLowDiffPer() != null && bseRealTimeData.getYearHighToYearLowDiffPer() > 10D //Yearly 10% change
                 && bseRealTimeData.getYearHighToLatestDiffPer() != null && bseRealTimeData.getYearHighToLatestDiffPer() > 4D//Makes sure we dont buy at year high
-                //&& bseRealTimeData.getPe() != null && bseRealTimeData.getPe() <= 22D
-                //&& bseRealTimeData.getPb() != null && bseRealTimeData.getPb() <= 3.5D
-                //&& bseRealTimeData.getDy() != null && bseRealTimeData.getDy() >= 1.2D
+                && filterOutIndexAsPerPePbDy(bseRealTimeData)
         );
+    }
+
+    private boolean filterOutIndexAsPerPePbDy(BseRealTimeData bseRealTimeData) {
+        bseClient.setFundamentals(bseRealTimeData);
+        return true;
+        //&& bseRealTimeData.getPe() != null && bseRealTimeData.getPe() <= 22D
+        //&& bseRealTimeData.getPb() != null && bseRealTimeData.getPb() <= 3.5D
+        //&& bseRealTimeData.getDy() != null && bseRealTimeData.getDy() >= 1.2D
     }
 
     private void derive(BseMktCapBoardResponse bseMktCapBoardResponse) {
@@ -280,5 +289,151 @@ public class BseServiceImpl implements BseService {
             */
             return diff;
         });
+    }
+
+    @Override
+    public BseEtfResponse getAllEtfWithInd(List<BseMktCapBoardResponse> bseAllIndicesResponse) {
+        try {
+            BseEtfResponse bseEtfResponse = bseClient.getEtfData();
+            deriveMetricsWithInd(bseEtfResponse, bseAllIndicesResponse);
+            sort(bseEtfResponse);
+            return bseEtfResponse;
+        } catch (Exception e) {
+            throw new RuntimeException("Error fetching all BSE ETF data: " + e.getMessage(), e);
+        }
+    }
+
+    private void deriveMetricsWithInd(BseEtfResponse bseEtfResponse, List<BseMktCapBoardResponse> bseAllIndicesResponse) {
+        if (bseEtfResponse == null || CollectionUtils.isEmpty(bseEtfResponse.getData())) {
+            return;
+        }
+        for (BseEtfData etf : bseEtfResponse.getData()) {
+            etf.setNavToMarketLtPDelta(generalUtil.getDelta(etf.getLtp(), etf.getNav()));
+            etf.setNavToMarketLtPDeltaPercent(generalUtil.getDeltaPercent(etf.getNav(), etf.getLtp()));
+            etf.setYearHighToLatestDiffPer(generalUtil.getDeltaPercent(etf.getWeek52High(), etf.getLtp()));
+            etf.setYearHighToYearLowDiffPer(generalUtil.getDeltaPercent(etf.getWeek52High(), etf.getWeek52Low()));
+            etf.setLatestToYearLowDiffPer(generalUtil.getDeltaPercent(etf.getLtp(), etf.getWeek52Low()));//nearWKL*-1
+            setIndDataInEtf(etf, bseAllIndicesResponse);
+        }
+    }
+
+    private void setIndDataInEtf(BseEtfData etf, List<BseMktCapBoardResponse> bseAllIndicesResponse) {
+        if (etf == null || bseAllIndicesResponse == null
+                || CollectionUtils.isEmpty(bseAllIndicesResponse)) {
+            return;
+        }
+        for (BseMktCapBoardResponse bseMktCapBoardResponse : bseAllIndicesResponse) {
+            for (BseRealTimeData bseRealTimeData : bseMktCapBoardResponse.getRealTime()) {
+                if (isEtfOfProvidedIndex(bseRealTimeData.getProcessedIndex(), bseRealTimeData.getProcessedIndexSymbol(), etf)) {
+                    etf.setBseIndexData(bseRealTimeData);
+                    return;
+                }
+            }
+        }
+    }
+
+    private boolean isEtfOfProvidedIndex(String indexSubStr, String indexSymbolSubStr, BseEtfData etf) {
+        if (StringUtils.isEmpty(etf.getProcessedScripCode()) && StringUtils.isEmpty(etf.getProcessedScripName())) {
+            return false;
+        }
+        if (StringUtils.isEmpty(indexSubStr) && StringUtils.isEmpty(indexSymbolSubStr)) {
+            return false;
+        }
+        return (
+                (StringUtils.isNotEmpty(etf.getProcessedScripCode())
+                        && (etf.getProcessedScripCode().contains(indexSubStr) || etf.getProcessedScripCode().contains(indexSymbolSubStr)))
+                        || (StringUtils.isNotEmpty(etf.getProcessedScripName())
+                        && (etf.getProcessedScripName().contains(indexSubStr) || etf.getProcessedScripName().contains(indexSymbolSubStr)))
+                        || (StringUtils.isNotEmpty(indexSubStr)
+                        && (indexSubStr.contains(etf.getProcessedScripCode()) || indexSubStr.contains(etf.getProcessedScripName())))
+                        || (StringUtils.isNotEmpty(indexSymbolSubStr)
+                        && (indexSymbolSubStr.contains(etf.getProcessedScripCode()) || indexSymbolSubStr.contains(etf.getProcessedScripName())))
+        );
+    }
+
+    private void sort(BseEtfResponse etfData) {
+        if (etfData == null || CollectionUtils.isEmpty(etfData.getData())) {
+            return;
+        }
+        Collections.sort(etfData.getData(), (etf1, etf2) -> {
+            int diff = Double.compare(etf2.getNavToMarketLtPDeltaPercent(), etf1.getNavToMarketLtPDeltaPercent());
+            if (ZERO_D.equals(diff)) {
+                diff = Double.compare(etf1.getLatestToYearLowDiffPer(), etf2.getLatestToYearLowDiffPer());
+            }
+            if (ZERO_D.equals(diff)) {
+                diff = Double.compare(etf1.getYearHighToYearLowDiffPer(), etf2.getYearHighToYearLowDiffPer());
+            }
+            if (ZERO_D.equals(diff) && etf1.getVolume() != null && etf2.getVolume() != null) {
+                diff = Double.compare(etf2.getVolume(), etf1.getVolume());
+            }
+            if (ZERO_D.equals(diff) && etf1.getChangePercent() != null && etf2.getChangePercent() != null) {
+                diff = Double.compare(etf1.getChangePercent(), etf2.getChangePercent());
+            }
+            return diff;
+        });
+    }
+
+    @Override
+    public BseEtfResponse getInvestableEtf(BseEtfResponse bseEtfResponse, List<BseRealTimeData> investableIndices) {
+        if (bseEtfResponse == null || CollectionUtils.isEmpty(bseEtfResponse.getData())) {
+            return bseEtfResponse;
+        }
+
+        // Filter ETFs based on investability criteria
+        List<BseEtfData> investableEtfs = bseEtfResponse.getData().stream()
+                .filter(etfData -> etfData != null
+                                && etfData.getVolume() != null && etfData.getVolume() > 20000L //ideally, etfData.getVolume() > 20,000L
+                                && (isInvestableBseIndex(investableIndices, etfData) || isPerformingEtf(etfData))
+                                && etfData.getLtp() != null && etfData.getWtAvgPrice() != null
+                        //&& etfData.getLtp() <= etfData.getWtAvgPrice()
+                )
+                .collect(Collectors.toList());
+
+        // Create response with filtered data
+        BseEtfResponse investableResponse = new BseEtfResponse(bseEtfResponse.getTimestamp()
+                , investableEtfs
+                , investableEtfs.size()
+                , ((int) investableEtfs.stream().filter(etf -> etf.getChange() != null && etf.getChange() > 0).count())
+                , ((int) investableEtfs.stream().filter(etf -> etf.getChange() != null && etf.getChange() < 0).count())
+                , ((int) investableEtfs.stream().filter(etf -> etf.getChange() != null && etf.getChange() == 0).count())
+                , (investableEtfs.stream().mapToDouble(etf -> etf.getTurnover() != null ? etf.getTurnover() : 0.0).sum())
+                , (investableEtfs.stream().mapToLong(etf -> etf.getVolume() != null ? etf.getVolume() : 0L).sum())
+                , (investableEtfs.stream().mapToDouble(etf -> etf.getMarketCap() != null ? etf.getMarketCap() : 0.0).sum())
+                , bseEtfResponse.getMarketStatus()
+                , bseEtfResponse.getLastUpdated()
+                , bseEtfResponse.getSource()
+                , bseEtfResponse.getSuccess()
+                , "Investable ETF data retrieved successfully"
+                , "NA");
+
+        return investableResponse;
+    }
+
+    private boolean isInvestableBseIndex(List<BseRealTimeData> investableIndices, BseEtfData etfData) {
+        if (etfData == null || etfData.getBseIndexData() == null || CollectionUtils.isEmpty(investableIndices)) {
+            return false;
+        }
+        return investableIndices.contains(etfData.getBseIndexData());
+    }
+
+    /**
+     * Check if an ETF is investable based on certain criteria
+     *
+     * @param etfData ETF data to check
+     * @return true if ETF is investable, false otherwise
+     */
+    private boolean isPerformingEtf(BseEtfData etfData) {
+        // Basic criteria for investable ETFs
+        return (etfData != null
+                && etfData.getLatestToYearLowDiffPer() != null && etfData.getLatestToYearLowDiffPer() < 12D //ideally, etfData.getLatestToYearLowDiffPer() < 12D
+                && etfData.getYearHighToYearLowDiffPer() != null && etfData.getYearHighToYearLowDiffPer() > 10D //Atleast 10% changes in year
+                && etfData.getYearHighToLatestDiffPer() != null && etfData.getYearHighToLatestDiffPer() > 4D//Makes sure we dont buy at year high
+                //&& etfData.getNavToMarketLtPDeltaPercent() != null && etfData.getNavToMarketLtPDeltaPercent() > -0.1D
+                //&& (etfData.getIsActive() != null || etfData.getIsActive())
+                //&& !Boolean.TRUE.equals(etfData.getIsSuspended())
+                //&& !Boolean.TRUE.equals(etfData.getIsDelisted())
+                && etfData.getTurnover() != null && etfData.getTurnover() > 0
+                //&& etfData.getMarketCap() != null && etfData.getMarketCap() > 1000000
+        ); // Minimum market cap of 1M
     }
 }

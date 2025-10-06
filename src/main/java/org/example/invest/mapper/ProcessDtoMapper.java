@@ -25,6 +25,7 @@ public class ProcessDtoMapper {
         processDto.setBseDto(bseDto);
 
         nseDtoMapper.addAllInvestableEtfAsPerBseIndices(nseDto, bseDto);
+        bseDtoMapper.addAllInvestableEtfAsPerNseIndices(nseDto, bseDto);
         return processDto;
     }
 }
