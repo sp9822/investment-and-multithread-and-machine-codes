@@ -224,10 +224,10 @@ public class BseServiceImpl implements BseService {
 
     private boolean filterOutIndexAsPerPePbDy(BseRealTimeData bseRealTimeData) {
         bseClient.setFundamentals(bseRealTimeData);
-        return true;
-        //&& bseRealTimeData.getPe() != null && bseRealTimeData.getPe() <= 22D
-        //&& bseRealTimeData.getPb() != null && bseRealTimeData.getPb() <= 3.5D
-        //&& bseRealTimeData.getDy() != null && bseRealTimeData.getDy() >= 1.2D
+        return (bseRealTimeData.getFundamentals() != null
+                && bseRealTimeData.getFundamentals().getPeRatio() != null && bseRealTimeData.getFundamentals().getPeRatio() <= 22D
+                && bseRealTimeData.getFundamentals().getPbRatio() != null && bseRealTimeData.getFundamentals().getPbRatio() <= 3.5D
+                && bseRealTimeData.getFundamentals().getDividendYield() != null && bseRealTimeData.getFundamentals().getDividendYield() >= 1.2D);
     }
 
     private void derive(BseMktCapBoardResponse bseMktCapBoardResponse) {

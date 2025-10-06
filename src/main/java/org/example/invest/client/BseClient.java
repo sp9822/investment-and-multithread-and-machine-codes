@@ -1,6 +1,7 @@
 package org.example.invest.client;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.example.invest.dto.bse.index.BseIndexFundamentals;
 import org.example.invest.dto.bse.index.BseMktCapBoardResponse;
@@ -112,7 +113,7 @@ public class BseClient {
 
                     if (cells.size() >= 10) { // Ensure we have enough columns
                         BseEtfData etfData = parseEtfRow(cells);
-                        if (etfData != null) {
+                        if (etfData != null && !etfDataList.contains(etfData)) {
                             etfDataList.add(etfData);
                         }
                     }
@@ -279,7 +280,9 @@ public class BseClient {
             etfData.setIsActive(true);
             etfData.setIsSuspended(false);
             etfData.setIsDelisted(false);
-            etfDataList.add(etfData);
+            if (!etfDataList.contains(etfData)) {
+                etfDataList.add(etfData);
+            }
         }
 
         return etfDataList;
@@ -335,14 +338,17 @@ public class BseClient {
             HttpHeaders headers = createBseHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            ResponseEntity<BseIndexFundamentals> response = restTemplate.exchange(
+            ResponseEntity<List<BseIndexFundamentals>> response = restTemplate.exchange(
                     url,
                     HttpMethod.GET,
                     entity,
-                    BseIndexFundamentals.class
+                    new org.springframework.core.ParameterizedTypeReference<List<BseIndexFundamentals>>() {
+                    }
             );
 
-            bseRealTimeData.setFundamentals(response.getBody());
+            if (response != null && CollectionUtils.isNotEmpty(response.getBody())) {
+                bseRealTimeData.setFundamentals(response.getBody().get(0));
+            }
         } catch (Exception e) {
             throw new RuntimeException("Error fetching BSE index fundamentals for ScripFlagCode: " + bseRealTimeData.getScripFlagCode()
                     + ": " + e.getMessage(), e);
