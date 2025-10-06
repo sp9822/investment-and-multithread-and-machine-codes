@@ -1,21 +1,17 @@
 package org.example;
 
-import java.util.List;
-import java.util.Scanner;
-import java.util.concurrent.Semaphore;
-
-public class Test {
+public class ThreadTest {
     volatile static int i;
     static int n;
 
-    Test(int n){
-        this.i=1;
-        this.n=n;
+    ThreadTest(int n) {
+        this.i = 1;
+        this.n = n;
     }
 
     public void printNums(int n) {
         this.i = 1;
-        this.n=n;
+        this.n = n;
 
         Thread et = new Thread(() -> {
             printEven();
@@ -49,7 +45,7 @@ public class Test {
     public synchronized void printOdd() {
         while (i <= n) {
             if (i % 2 == 1) {
-                System.out.println(Thread.currentThread().getName() + " " + + i);
+                System.out.println(Thread.currentThread().getName() + " " + +i);
                 i++;
                 notifyAll();
             } else {

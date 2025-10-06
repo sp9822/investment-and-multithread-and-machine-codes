@@ -128,12 +128,12 @@ public class BseClient {
             BseEtfResponse response = new BseEtfResponse(java.time.Instant.now().toString()
                     , etfDataList
                     , etfDataList == null ? 0 : etfDataList.size()
-                    , ((int) etfDataList.stream().filter(etf -> etf.getChange() != null && etf.getChange() > 0).count())
-                    , ((int) etfDataList.stream().filter(etf -> etf.getChange() != null && etf.getChange() < 0).count())
-                    , ((int) etfDataList.stream().filter(etf -> etf.getChange() != null && etf.getChange() == 0).count())
-                    , (etfDataList.stream().mapToDouble(etf -> etf.getTurnover() != null ? etf.getTurnover() : 0.0).sum())
-                    , (etfDataList.stream().mapToLong(etf -> etf.getVolume() != null ? etf.getVolume() : 0L).sum())
-                    , (etfDataList.stream().mapToDouble(etf -> etf.getMarketCap() != null ? etf.getMarketCap() : 0.0).sum())
+                    , ((int) (etfDataList != null ? etfDataList.stream().filter(etf -> etf.getChange() != null && etf.getChange() > 0).count() : 0))
+                    , ((int) (etfDataList != null ? etfDataList.stream().filter(etf -> etf.getChange() != null && etf.getChange() < 0).count() : 0))
+                    , ((int) (etfDataList != null ? etfDataList.stream().filter(etf -> etf.getChange() != null && etf.getChange() == 0).count() : 0))
+                    , (etfDataList != null ? etfDataList.stream().mapToDouble(etf -> etf.getTurnover() != null ? etf.getTurnover() : 0.0).sum() : 0.0)
+                    , (etfDataList != null ? etfDataList.stream().mapToLong(etf -> etf.getVolume() != null ? etf.getVolume() : 0L).sum() : 0L)
+                    , (etfDataList != null ? etfDataList.stream().mapToDouble(etf -> etf.getMarketCap() != null ? etf.getMarketCap() : 0.0).sum() : 0.0)
                     , "Don't Know"
                     , java.time.Instant.now().toString()
                     , "BSE"
@@ -194,18 +194,24 @@ public class BseClient {
             }
             if (cells.size() >= 4) {
                 String[] dayHighLowArr = cells.get(3).text().split("/");
-                etfData.setHigh(parseDouble(dayHighLowArr[0]));
-                etfData.setLow(parseDouble(dayHighLowArr[1]));
+                if (dayHighLowArr.length >= 2) {
+                    etfData.setHigh(parseDouble(dayHighLowArr[0]));
+                    etfData.setLow(parseDouble(dayHighLowArr[1]));
+                }
             }
             if (cells.size() >= 5) {
                 String[] yearHighLowArr = cells.get(4).text().split("/");
-                etfData.setWeek52High(parseDouble(yearHighLowArr[0]));
-                etfData.setWeek52Low(parseDouble(yearHighLowArr[1]));
+                if (yearHighLowArr.length >= 2) {
+                    etfData.setWeek52High(parseDouble(yearHighLowArr[0]));
+                    etfData.setWeek52Low(parseDouble(yearHighLowArr[1]));
+                }
             }
             if (cells.size() >= 6) {
                 String[] prevCloseOpenArr = cells.get(5).text().split("/");
-                etfData.setPrevClose(parseDouble(prevCloseOpenArr[0]));
-                etfData.setOpen(parseDouble(prevCloseOpenArr[1]));
+                if (prevCloseOpenArr.length >= 2) {
+                    etfData.setPrevClose(parseDouble(prevCloseOpenArr[0]));
+                    etfData.setOpen(parseDouble(prevCloseOpenArr[1]));
+                }
             }
             if (cells.size() >= 7) {
                 etfData.setWtAvgPrice(parseDouble(cells.get(6).text()));
@@ -215,13 +221,17 @@ public class BseClient {
             }
             if (cells.size() >= 9) {
                 Double turnover = parseDouble(cells.get(8).text());//inLacs
-                turnover *= 100000D;
-                etfData.setTurnover(turnover);
+                if (turnover != null) {
+                    turnover *= 100000D;
+                    etfData.setTurnover(turnover);
+                }
             }
             if (cells.size() >= 10) {
                 String[] circuitLimitsArr = cells.get(9).text().split("/");
-                etfData.setCircuit(parseDouble(circuitLimitsArr[0]));
-                etfData.setLimits(parseDouble(circuitLimitsArr[1]));
+                if (circuitLimitsArr.length >= 2) {
+                    etfData.setCircuit(parseDouble(circuitLimitsArr[0]));
+                    etfData.setLimits(parseDouble(circuitLimitsArr[1]));
+                }
             }
 
             // Set default values for required fields
@@ -243,7 +253,7 @@ public class BseClient {
         </td>
          */
         Elements scripLink = scriptElement.select("a");
-        if (scripLink != null && scripLink.size() > 0) {
+        if (scripLink != null && !scripLink.isEmpty()) {
             String scripLinkText = scripLink.get(0).attr("href");
             if (StringUtils.isNotEmpty(scripLinkText)) {
                 scripLinkText = scripLinkText.replaceAll("https://www.bseindia.com/stock-share-price/", "");
@@ -280,7 +290,7 @@ public class BseClient {
             etfData.setIsActive(true);
             etfData.setIsSuspended(false);
             etfData.setIsDelisted(false);
-            if (!etfDataList.contains(etfData)) {
+            if (etfData != null && !etfDataList.contains(etfData)) {
                 etfDataList.add(etfData);
             }
         }
@@ -346,7 +356,7 @@ public class BseClient {
                     }
             );
 
-            if (response != null && CollectionUtils.isNotEmpty(response.getBody())) {
+            if (response != null && response.getBody() != null && CollectionUtils.isNotEmpty(response.getBody())) {
                 bseRealTimeData.setFundamentals(response.getBody().get(0));
             }
         } catch (Exception e) {

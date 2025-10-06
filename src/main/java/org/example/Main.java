@@ -73,7 +73,7 @@ public class Main {
     private static void oddEvenInTT() {
         Scanner sc=new Scanner(System.in);
         System.out.println("Provide no.");
-        Test test=new Test(sc.nextInt());
+        ThreadTest test=new ThreadTest(sc.nextInt());
 
         Thread et = new Thread(() -> {
             test.printEven();

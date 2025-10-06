@@ -139,11 +139,11 @@ public class EtfData {
         return this.meta.getCompanyName();
     }
 
-    public void setProcessedcompanyName(String processedcompanyName) {
+    public void setProcessedCompanyName(String processedCompanyName) {
         if (this.meta == null) {
             this.meta = new EtfMeta();
         }
-        this.meta.setProcessedcompanyName(processedcompanyName);
+        this.meta.setProcessedCompanyName(processedCompanyName);
     }
 
 
@@ -151,6 +151,6 @@ public class EtfData {
         if (this.meta == null) {
             return StringUtils.EMPTY;
         }
-        return this.meta.getProcessedcompanyName();
+        return this.meta.getProcessedCompanyName();
     }
 }

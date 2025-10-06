@@ -28,8 +28,8 @@ public class EtfMeta {
     @JsonProperty("companyName")
     private String companyName;
 
-    @JsonProperty("processedcompanyName")
-    private String processedcompanyName;
+    @JsonProperty("processedCompanyName")
+    private String processedCompanyName;
 
     @JsonProperty("industry")
     private String industry;

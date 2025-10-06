@@ -240,7 +240,7 @@ public class StockService {
         }
         for (EtfData etf : etfData.getData()) {
             etf.setProcessedAssets(removeHypnUnderScorSpcSecIndAndGetLowerCase(etf.getAssets()));
-            etf.setProcessedcompanyName(removeHypnUnderScorSpcSecIndAndGetLowerCase(etf.getCompanyName()));
+            etf.setProcessedCompanyName(removeHypnUnderScorSpcSecIndAndGetLowerCase(etf.getCompanyName()));
             etf.setNavToMarketLtPDelta(getDelta(etf.getLtP(), etf.getNav()));
             etf.setNavToMarketLtPDeltaPercent(getDeltaPercent(etf.getNav(), etf.getLtP()));
             etf.setYearHighToYearLowDiffPer(getYearHighToYearLowDiffPer(etf));
@@ -387,7 +387,7 @@ public class StockService {
         }
         for (EtfData etf : nseEtfResponse.getData()) {
             etf.setProcessedAssets(removeHypnUnderScorSpcSecIndAndGetLowerCase(etf.getAssets()));
-            etf.setProcessedcompanyName(removeHypnUnderScorSpcSecIndAndGetLowerCase(etf.getCompanyName()));
+            etf.setProcessedCompanyName(removeHypnUnderScorSpcSecIndAndGetLowerCase(etf.getCompanyName()));
             etf.setNavToMarketLtPDelta(getDelta(etf.getLtP(), etf.getNav()));
             etf.setNavToMarketLtPDeltaPercent(getDeltaPercent(etf.getNav(), etf.getLtP()));
             etf.setYearHighToYearLowDiffPer(getYearHighToYearLowDiffPer(etf));

@@ -29,7 +29,12 @@ public class NseServiceImpl implements NseService {
 
     @Override
     public NseAllIndicesResponse getAllIndices() {
-        return process(nseClient.getAllIndices(null));
+        try {
+            return process(nseClient.getAllIndices(null));
+        } catch (Exception e) {
+            log.error("Error fetching NSE indices: {}", e.getMessage(), e);
+            throw new RuntimeException("Error fetching NSE indices: " + e.getMessage(), e);
+        }
     }
 
     private NseAllIndicesResponse process(NseAllIndicesResponse allIndices) {
@@ -39,6 +44,9 @@ public class NseServiceImpl implements NseService {
     }
 
     private void deriveMetrics(NseAllIndicesResponse allIndices) {
+        if (allIndices == null || CollectionUtils.isEmpty(allIndices.getData())) {
+            return;
+        }
         for (NseIndexData nseIndexData : allIndices.getData()) {
             nseIndexData.setProcessedIndex(generalUtil.removeHypnUnderScorSpcSecIndAndGetLowerCase(nseIndexData.getIndex()));
             nseIndexData.setProcessedIndexSymbol(generalUtil.removeHypnUnderScorSpcSecIndAndGetLowerCase(nseIndexData.getIndex()));
@@ -50,6 +58,9 @@ public class NseServiceImpl implements NseService {
     }
 
     private void sort(NseAllIndicesResponse allIndices) {
+        if (allIndices == null || CollectionUtils.isEmpty(allIndices.getData())) {
+            return;
+        }
         Collections.sort(allIndices.getData(), (ind1, ind2) -> {
             int diff = Double.compare(ind2.getYearHighToLatestDiffPer(), ind1.getYearHighToLatestDiffPer());
             if (ZERO_D.equals(diff)) {
@@ -82,10 +93,15 @@ public class NseServiceImpl implements NseService {
 
     @Override
     public NseEtfResponse getAllEtfWithInd(String nseIndiaCookie, NseAllIndicesResponse nseAllIndicesResponse) {
-        NseEtfResponse nseEtfResponse = nseClient.getEtfData(nseIndiaCookie);
-        deriveMetricsWithInd(nseEtfResponse, nseAllIndicesResponse);
-        sort(nseEtfResponse);
-        return nseEtfResponse;
+        try {
+            NseEtfResponse nseEtfResponse = nseClient.getEtfData(nseIndiaCookie);
+            deriveMetricsWithInd(nseEtfResponse, nseAllIndicesResponse);
+            sort(nseEtfResponse);
+            return nseEtfResponse;
+        } catch (Exception e) {
+            log.error("Error fetching NSE ETF data: {}", e.getMessage(), e);
+            throw new RuntimeException("Error fetching NSE ETF data: " + e.getMessage(), e);
+        }
     }
 
     private void deriveMetricsWithInd(NseEtfResponse nseEtfResponse, NseAllIndicesResponse nseAllIndicesResponse) {
@@ -94,7 +110,7 @@ public class NseServiceImpl implements NseService {
         }
         for (EtfData etf : nseEtfResponse.getData()) {
             etf.setProcessedAssets(generalUtil.removeHypnUnderScorSpcSecIndAndGetLowerCase(etf.getAssets()));
-            etf.setProcessedcompanyName(generalUtil.removeHypnUnderScorSpcSecIndAndGetLowerCase(etf.getCompanyName()));
+            etf.setProcessedCompanyName(generalUtil.removeHypnUnderScorSpcSecIndAndGetLowerCase(etf.getCompanyName()));
             etf.setNavToMarketLtPDelta(generalUtil.getDelta(etf.getLtP(), etf.getNav()));
             etf.setNavToMarketLtPDeltaPercent(generalUtil.getDeltaPercent(etf.getNav(), etf.getLtP()));
             etf.setYearHighToYearLowDiffPer(generalUtil.getDeltaPercent(etf.getWkhi(), etf.getWklo()));
