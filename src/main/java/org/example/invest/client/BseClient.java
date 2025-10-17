@@ -3,6 +3,7 @@ package org.example.invest.client;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.example.invest.dto.bse.etf.ScripHeaderData;
 import org.example.invest.dto.bse.index.BseIndexFundamentals;
 import org.example.invest.dto.bse.index.BseMktCapBoardResponse;
 import org.example.invest.dto.bse.etf.BseEtfResponse;
@@ -19,6 +20,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
@@ -56,6 +58,14 @@ public class BseClient {
 
             return response.getBody();
         } catch (Exception e) {
+            if (e instanceof java.net.SocketTimeoutException || e instanceof ResourceAccessException) {
+                try {
+                    Thread.sleep(10000);
+                    return getMktCapBoardData(category, type);
+                } catch (InterruptedException interruptedException) {
+                    throw new RuntimeException("Error fetching BSE market cap board data for category " + category + " and type " + type + ": " + e.getMessage(), e);
+                }
+            }
             throw new RuntimeException("Error fetching BSE market cap board data for category " + category + " and type " + type + ": " + e.getMessage(), e);
         }
     }
@@ -84,6 +94,14 @@ public class BseClient {
             return parseEtfDataFromHtml(response.getBody());
         } catch (Exception e) {
             log.error("Error fetching BSE ETF data: {}", e.getMessage(), e);
+            if (e instanceof java.net.SocketTimeoutException || e instanceof ResourceAccessException) {
+                try {
+                    Thread.sleep(10000);
+                    return getEtfData();
+                } catch (InterruptedException interruptedException) {
+                    throw new RuntimeException("Error fetching BSE ETF data: " + e.getMessage(), e);
+                }
+            }
             throw new RuntimeException("Error fetching BSE ETF data: " + e.getMessage(), e);
         }
     }
@@ -184,6 +202,7 @@ public class BseClient {
                 etfData.setProcessedScripCode(generalUtil.removeHypnUnderScorSpcSecIndAndGetLowerCase(etfData.getScripCode()));
 
                 etfData.setScripName(getScripName(scriptElement));
+                etfData.setScripCodeId(getScripCodeId(scriptElement));
                 etfData.setProcessedScripName(generalUtil.removeHypnUnderScorSpcSecIndAndGetLowerCase(etfData.getScripName()));
             }
             if (cells.size() >= 2) {
@@ -244,6 +263,26 @@ public class BseClient {
             log.warn("Failed to parse ETF row: {}", e.getMessage());
             return null;
         }
+    }
+
+    private Long getScripCodeId(Element scriptElement) {
+        /*
+        <td class="TTRow_left">
+            <a class="tablebluelink10" href="https://www.bseindia.com/stock-share-price/nippon-india-etf-nifty-1d-rate-liquid-bees/liquidbees/590096/" target="_blank">LIQUIDBEES</a>
+        </td>
+         */
+        Elements scripLink = scriptElement.select("a");
+        if (scripLink != null && !scripLink.isEmpty()) {
+            String scripLinkText = scripLink.get(0).attr("href");
+            if (StringUtils.isNotEmpty(scripLinkText)) {
+                String[] scripLinkTextArr = scripLinkText.split("/");
+                int scripCodeIdInd = scripLinkTextArr.length - 1;
+                if (scripCodeIdInd >= 0) {
+                    return Long.valueOf(scripLinkTextArr[scripCodeIdInd]);
+                }
+            }
+        }
+        return null;
     }
 
     private String getScripName(Element scriptElement) {
@@ -360,6 +399,15 @@ public class BseClient {
                 bseRealTimeData.setFundamentals(response.getBody().get(0));
             }
         } catch (Exception e) {
+            if (e instanceof java.net.SocketTimeoutException || e instanceof ResourceAccessException) {
+                try {
+                    Thread.sleep(10000);
+                    return setFundamentals(bseRealTimeData);
+                } catch (InterruptedException interruptedException) {
+                    throw new RuntimeException("Error fetching BSE index fundamentals for ScripFlagCode: " + bseRealTimeData.getScripFlagCode()
+                            + ": " + e.getMessage(), e);
+                }
+            }
             throw new RuntimeException("Error fetching BSE index fundamentals for ScripFlagCode: " + bseRealTimeData.getScripFlagCode()
                     + ": " + e.getMessage(), e);
         }
@@ -377,5 +425,45 @@ public class BseClient {
         headers.set("Accept", "*/*");
         headers.set("Referer", "https://www.bseindia.com/");
         return headers;
+    }
+
+    /**
+     * Get scrip header data for a specific scrip code ID
+     *
+     * @param scripCodeId The scrip code ID to fetch header data for
+     * @return ScripHeaderData containing current rate, company name, header info, and company response
+     */
+    public ScripHeaderData getScripHeaderData(Long scripCodeId) {
+        try {
+            if (scripCodeId == null) {
+                return null;
+            }
+
+            String url = "https://api.bseindia.com/BseIndiaAPI/api/getScripHeaderData/w?Debtflag=&scripcode=" + scripCodeId + "&seriesid=";
+
+            HttpHeaders headers = createBseHeaders();
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<ScripHeaderData> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    entity,
+                    ScripHeaderData.class
+            );
+
+            log.info("Successfully fetched scrip header data for scrip code ID: {}", scripCodeId);
+            return response.getBody();
+        } catch (Exception e) {
+            log.error("Error fetching scrip header data for scrip code ID {}: {}", scripCodeId, e.getMessage(), e);
+            if (e instanceof java.net.SocketTimeoutException || e instanceof ResourceAccessException) {
+                try {
+                    Thread.sleep(10000);
+                    return getScripHeaderData(scripCodeId);
+                } catch (InterruptedException interruptedException) {
+                    throw new RuntimeException("Error fetching scrip header data for scrip code ID " + scripCodeId + ": " + e.getMessage(), e);
+                }
+            }
+            throw new RuntimeException("Error fetching scrip header data for scrip code ID " + scripCodeId + ": " + e.getMessage(), e);
+        }
     }
 }

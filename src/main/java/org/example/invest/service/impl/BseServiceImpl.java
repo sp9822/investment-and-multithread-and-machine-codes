@@ -3,6 +3,8 @@ package org.example.invest.service.impl;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.example.invest.client.BseClient;
+import org.example.invest.dto.bse.etf.Header;
+import org.example.invest.dto.bse.etf.ScripHeaderData;
 import org.example.invest.dto.bse.index.BseMktCapBoardResponse;
 import org.example.invest.dto.bse.index.BseAsOnData;
 import org.example.invest.dto.bse.index.BseEodData;
@@ -22,6 +24,12 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.example.Constants.ZERO_D;
+import static org.example.Constants.ZERO_I;
+import static org.example.ShortlistCriteriaConfig.LEAST_BSE_ETF_VOLUME;
+import static org.example.ShortlistCriteriaConfig.LEAST_NavToMarketLtPDeltaPercent_D;
+import static org.example.ShortlistCriteriaConfig.LEAST_YearHighToLatestDiffPer_D;
+import static org.example.ShortlistCriteriaConfig.LEAST_YearHighToYearLowDiffPer_D;
+import static org.example.ShortlistCriteriaConfig.MAX_LTP_TO_YRLOW_DIFF_PER_D;
 
 /**
  * Service class for BSE (Bombay Stock Exchange) API operations
@@ -215,9 +223,9 @@ public class BseServiceImpl implements BseService {
                 && bseRealTimeData.getWeek52High() != null && bseRealTimeData.getWeek52High() > ZERO_D
                 //&& bseRealTimeData.getOneYearAgoVal() != null && bseRealTimeData.getOneYearAgoVal() > ZERO_D
                 //&& bseRealTimeData.getWeek52High() > bseRealTimeData.getOneYearAgoVal()
-                && bseRealTimeData.getLatestToYearLowDiffPer() != null && bseRealTimeData.getLatestToYearLowDiffPer() < 12D//Ideally bseRealTimeData.getLatestToYearLowDiffPer() < 12D
-                && bseRealTimeData.getYearHighToYearLowDiffPer() != null && bseRealTimeData.getYearHighToYearLowDiffPer() > 10D //Yearly 10% change
-                && bseRealTimeData.getYearHighToLatestDiffPer() != null && bseRealTimeData.getYearHighToLatestDiffPer() > 4D//Makes sure we dont buy at year high
+                && bseRealTimeData.getLatestToYearLowDiffPer() != null && bseRealTimeData.getLatestToYearLowDiffPer() < MAX_LTP_TO_YRLOW_DIFF_PER_D
+                && bseRealTimeData.getYearHighToYearLowDiffPer() != null && bseRealTimeData.getYearHighToYearLowDiffPer() > LEAST_YearHighToYearLowDiffPer_D
+                && bseRealTimeData.getYearHighToLatestDiffPer() != null && bseRealTimeData.getYearHighToLatestDiffPer() > LEAST_YearHighToLatestDiffPer_D//Makes sure we dont buy at year high
                 && filterOutIndexAsPerPePbDy(bseRealTimeData)
         );
     }
@@ -250,6 +258,7 @@ public class BseServiceImpl implements BseService {
         }
         bseIndexRealTimeData.setProcessedIndex(generalUtil.removeHypnUnderScorSpcSecIndAndGetLowerCase(bseIndexRealTimeData.getIndexName()));
         bseIndexRealTimeData.setProcessedIndexSymbol(generalUtil.removeHypnUnderScorSpcSecIndAndGetLowerCase(bseIndexRealTimeData.getIndexCode()));
+        bseIndexRealTimeData.setYrMedianVal(generalUtil.getMedian(bseIndexRealTimeData.getWeek52High(), bseIndexRealTimeData.getWeek52Low()));
         bseIndexRealTimeData.setYearHighToLatestDiffPer(generalUtil.getDeltaPercent(bseIndexRealTimeData.getWeek52High()
                 , bseIndexRealTimeData.getCurrentValue()));
         bseIndexRealTimeData.setLatestToYearLowDiffPer(generalUtil.getDeltaPercent(bseIndexRealTimeData.getCurrentValue()
@@ -260,30 +269,30 @@ public class BseServiceImpl implements BseService {
 
     private void sort(List<BseRealTimeData> bseIndicesRealTimeData) {
         Collections.sort(bseIndicesRealTimeData, (ind1, ind2) -> {
-            int diff = Double.compare(ind1.getLatestToYearLowDiffPer(), ind2.getLatestToYearLowDiffPer());
-            if (ZERO_D.equals(diff)) {
-                diff = Double.compare(ind2.getYearHighToLatestDiffPer(), ind1.getYearHighToLatestDiffPer());
+            int diff = generalUtil.compareWithNullInLast(ind1.getLatestToYearLowDiffPer(), ind2.getLatestToYearLowDiffPer());
+            if (ZERO_I.equals(diff)) {
+                diff = generalUtil.compareWithNullInLast(ind2.getYearHighToLatestDiffPer(), ind1.getYearHighToLatestDiffPer());
             }
-            if (ZERO_D.equals(diff)) {
-                diff = Double.compare(ind2.getYearHighToYearLowDiffPer(), ind1.getYearHighToYearLowDiffPer());
+            if (ZERO_I.equals(diff)) {
+                diff = generalUtil.compareWithNullInLast(ind2.getYearHighToYearLowDiffPer(), ind1.getYearHighToYearLowDiffPer());
             }
             /*
-            if (ZERO_D.equals(diff) && ind1.getPe() != null && ind2.getPe() != null) {
-                diff = Double.compare(ind1.getPe(), ind2.getPe());
+            if (ZERO_I.equals(diff) && ind1.getPe() != null && ind2.getPe() != null) {
+                diff = generalUtil.compareWithNullInLast(ind1.getPe(), ind2.getPe());
             }
-            if (ZERO_D.equals(diff) && ind1.getDy() != null && ind2.getDy() != null) {
-                diff = Double.compare(ind2.getDy(), ind1.getDy());
+            if (ZERO_I.equals(diff) && ind1.getDy() != null && ind2.getDy() != null) {
+                diff = generalUtil.compareWithNullInLast(ind2.getDy(), ind1.getDy());
             }
-            if (ZERO_D.equals(diff) && ind1.getPb() != null && ind2.getPb() != null) {
-                diff = Double.compare(ind1.getPb(), ind2.getPb());
+            if (ZERO_I.equals(diff) && ind1.getPb() != null && ind2.getPb() != null) {
+                diff = generalUtil.compareWithNullInLast(ind1.getPb(), ind2.getPb());
             }
-            if (ZERO_D.equals(diff) && ind1.getAdvances() != null && ind2.getAdvances() != null) {
+            if (ZERO_I.equals(diff) && ind1.getAdvances() != null && ind2.getAdvances() != null) {
                 diff = Long.compare(ind2.getAdvances(), ind1.getAdvances());
             }
-            if (ZERO_D.equals(diff) && ind1.getDeclines() != null && ind2.getDeclines() != null) {
+            if (ZERO_I.equals(diff) && ind1.getDeclines() != null && ind2.getDeclines() != null) {
                 diff = Long.compare(ind1.getDeclines(), ind2.getDeclines());
             }
-            if (ZERO_D.equals(diff) && ind1.getUnchanged() != null && ind2.getUnchanged() != null) {
+            if (ZERO_I.equals(diff) && ind1.getUnchanged() != null && ind2.getUnchanged() != null) {
                 diff = Long.compare(ind2.getUnchanged(), ind1.getUnchanged());
             }
             */
@@ -310,6 +319,7 @@ public class BseServiceImpl implements BseService {
         for (BseEtfData etf : bseEtfResponse.getData()) {
             etf.setNavToMarketLtPDelta(generalUtil.getDelta(etf.getLtp(), etf.getNav()));
             etf.setNavToMarketLtPDeltaPercent(generalUtil.getDeltaPercent(etf.getNav(), etf.getLtp()));
+            etf.setYrMedianVal(generalUtil.getMedian(etf.getWeek52High(), etf.getWeek52Low()));
             etf.setYearHighToLatestDiffPer(generalUtil.getDeltaPercent(etf.getWeek52High(), etf.getLtp()));
             etf.setYearHighToYearLowDiffPer(generalUtil.getDeltaPercent(etf.getWeek52High(), etf.getWeek52Low()));
             etf.setLatestToYearLowDiffPer(generalUtil.getDeltaPercent(etf.getLtp(), etf.getWeek52Low()));//nearWKL*-1
@@ -356,18 +366,18 @@ public class BseServiceImpl implements BseService {
             return;
         }
         Collections.sort(etfData.getData(), (etf1, etf2) -> {
-            int diff = Double.compare(etf2.getNavToMarketLtPDeltaPercent(), etf1.getNavToMarketLtPDeltaPercent());
-            if (ZERO_D.equals(diff)) {
-                diff = Double.compare(etf1.getLatestToYearLowDiffPer(), etf2.getLatestToYearLowDiffPer());
+            int diff = generalUtil.compareWithNullInLast(etf2.getNavToMarketLtPDeltaPercent(), etf1.getNavToMarketLtPDeltaPercent());
+            if (ZERO_I.equals(diff)) {
+                diff = generalUtil.compareWithNullInLast(etf1.getLatestToYearLowDiffPer(), etf2.getLatestToYearLowDiffPer());
             }
-            if (ZERO_D.equals(diff)) {
-                diff = Double.compare(etf1.getYearHighToYearLowDiffPer(), etf2.getYearHighToYearLowDiffPer());
+            if (ZERO_I.equals(diff)) {
+                diff = generalUtil.compareWithNullInLast(etf1.getYearHighToYearLowDiffPer(), etf2.getYearHighToYearLowDiffPer());
             }
-            if (ZERO_D.equals(diff) && etf1.getVolume() != null && etf2.getVolume() != null) {
-                diff = Double.compare(etf2.getVolume(), etf1.getVolume());
+            if (ZERO_I.equals(diff) && etf1.getVolume() != null && etf2.getVolume() != null) {
+                diff = generalUtil.compareWithNullInLast(etf2.getVolume(), etf1.getVolume());
             }
-            if (ZERO_D.equals(diff) && etf1.getChangePercent() != null && etf2.getChangePercent() != null) {
-                diff = Double.compare(etf1.getChangePercent(), etf2.getChangePercent());
+            if (ZERO_I.equals(diff) && etf1.getChangePercent() != null && etf2.getChangePercent() != null) {
+                diff = generalUtil.compareWithNullInLast(etf1.getChangePercent(), etf2.getChangePercent());
             }
             return diff;
         });
@@ -382,7 +392,7 @@ public class BseServiceImpl implements BseService {
         // Filter ETFs based on investability criteria
         List<BseEtfData> investableEtfs = bseEtfResponse.getData().stream()
                 .filter(etfData -> etfData != null
-                                && etfData.getVolume() != null && etfData.getVolume() > 20000L //ideally, etfData.getVolume() > 20,000L
+                                && etfData.getVolume() != null && etfData.getVolume() > LEAST_BSE_ETF_VOLUME
                                 && (isInvestableBseIndex(investableIndices, etfData) || isPerformingEtf(etfData))
                                 && etfData.getLtp() != null && etfData.getWtAvgPrice() != null
                         //&& etfData.getLtp() <= etfData.getWtAvgPrice()
@@ -428,12 +438,31 @@ public class BseServiceImpl implements BseService {
                 && etfData.getLatestToYearLowDiffPer() != null && etfData.getLatestToYearLowDiffPer() < 12D //ideally, etfData.getLatestToYearLowDiffPer() < 12D
                 && etfData.getYearHighToYearLowDiffPer() != null && etfData.getYearHighToYearLowDiffPer() > 10D //Atleast 10% changes in year
                 && etfData.getYearHighToLatestDiffPer() != null && etfData.getYearHighToLatestDiffPer() > 4D//Makes sure we dont buy at year high
-                //&& etfData.getNavToMarketLtPDeltaPercent() != null && etfData.getNavToMarketLtPDeltaPercent() > -0.1D
+                && isLtpGoodAsPerNav(etfData)
                 //&& (etfData.getIsActive() != null || etfData.getIsActive())
                 //&& !Boolean.TRUE.equals(etfData.getIsSuspended())
                 //&& !Boolean.TRUE.equals(etfData.getIsDelisted())
                 && etfData.getTurnover() != null && etfData.getTurnover() > 0
                 //&& etfData.getMarketCap() != null && etfData.getMarketCap() > 1000000
         ); // Minimum market cap of 1M
+    }
+
+    private boolean isLtpGoodAsPerNav(BseEtfData etfData) {
+        setNavData(etfData);
+        return etfData.getNavToMarketLtPDeltaPercent() != null && etfData.getNavToMarketLtPDeltaPercent() > LEAST_NavToMarketLtPDeltaPercent_D;
+    }
+
+    private void setNavData(BseEtfData etfData) {
+        ScripHeaderData scripHeaderData = bseClient.getScripHeaderData(etfData.getScripCodeId());
+        etfData.setScripHeaderData(scripHeaderData);
+        if (scripHeaderData != null) {
+            Header header = scripHeaderData.getHeader();
+            if (header != null) {
+                etfData.setNav(header.getNavRate());
+                etfData.setNavDate(header.getNavDttm());
+                etfData.setNavToMarketLtPDelta(generalUtil.getDelta(etfData.getNav(), etfData.getLtp()));
+                etfData.setNavToMarketLtPDeltaPercent(generalUtil.getDeltaPercent(etfData.getNav(), etfData.getLtp()));
+            }
+        }
     }
 }

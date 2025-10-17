@@ -20,6 +20,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static org.example.ShortlistCriteriaConfig.LEAST_BSE_ETF_VOLUME;
+
 @Component
 public class BseDtoMapper {
     @Autowired
@@ -79,7 +81,7 @@ public class BseDtoMapper {
                     investable = investable || etfData.getProcessedScripName().contains(investableNseIndex.getProcessedIndex())
                             || etfData.getProcessedScripName().contains(investableNseIndex.getProcessedIndexSymbol());
                 }
-                if (investable) {
+                if (investable && etfData.getVolume() != null && etfData.getVolume() > LEAST_BSE_ETF_VOLUME) {
                     etfData.setNseIndexData(investableNseIndex);
                     return true;
                 }

@@ -1,7 +1,12 @@
 package org.example.invest.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 /**
  * DTO for market status in NSE ETF API response
@@ -13,28 +18,28 @@ import lombok.*;
 @ToString
 @EqualsAndHashCode
 public class MarketStatus {
-    
+
     @JsonProperty("market")
     private String market;
-    
+
     @JsonProperty("marketStatus")
     private String marketStatus;
-    
+
     @JsonProperty("tradeDate")
     private String tradeDate;
-    
+
     @JsonProperty("index")
     private String index;
-    
+
     @JsonProperty("last")
     private Double last;
-    
+
     @JsonProperty("variation")
     private Double variation;
-    
+
     @JsonProperty("percentChange")
     private Double percentChange;
-    
+
     @JsonProperty("marketStatusMessage")
     private String marketStatusMessage;
 }

@@ -43,6 +43,9 @@ public class NseIndexData extends IndexData {
     @JsonProperty("last")
     private Double last;
 
+    @JsonProperty("yrMedianVal")
+    private Double yrMedianVal;
+
     @JsonProperty("percentChange")
     private Double percentChange;
 

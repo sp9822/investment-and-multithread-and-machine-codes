@@ -7,6 +7,7 @@ import org.example.invest.dto.nse.index.NseIndexData;
 import org.example.invest.dto.nse.index.NseAllIndicesResponse;
 import org.example.invest.dto.nse.etf.NseEtfResponse;
 import org.example.invest.dto.OldProcessDto;
+import org.example.invest.util.GeneralUtil;
 import org.example.invest.util.NseCookieUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,12 @@ import org.springframework.util.CollectionUtils;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static org.example.ShortlistCriteriaConfig.LEAST_ETF_VOLUME;
+import static org.example.ShortlistCriteriaConfig.LEAST_NavToMarketLtPDeltaPercent_D;
+import static org.example.ShortlistCriteriaConfig.LEAST_YearHighToLatestDiffPer_D;
+import static org.example.ShortlistCriteriaConfig.LEAST_YearHighToYearLowDiffPer_D;
+import static org.example.ShortlistCriteriaConfig.MAX_LTP_TO_YRLOW_DIFF_PER_D;
 
 /**
  * Service class demonstrating how to use Feign client in Java 11
@@ -28,6 +35,9 @@ public class StockService {
 
     @Autowired
     private NseClient nseClient;
+
+    @Autowired
+    private GeneralUtil generalUtil;
 
     /**
      * Get all NSE indices data
@@ -75,18 +85,18 @@ public class StockService {
 
     private void sort(NseAllIndicesResponse allIndices) {
         Collections.sort(allIndices.getData(), (ind1, ind2) -> {
-            int diff = Double.compare(ind1.getLatestToYearLowDiffPer(), ind2.getLatestToYearLowDiffPer());
+            int diff = generalUtil.compareWithNullInLast(ind1.getLatestToYearLowDiffPer(), ind2.getLatestToYearLowDiffPer());
             if (ZERO_D.equals(diff)) {
-                diff = Double.compare(ind2.getYearHighToYearLowDiffPer(), ind1.getYearHighToYearLowDiffPer());
+                diff = generalUtil.compareWithNullInLast(ind2.getYearHighToYearLowDiffPer(), ind1.getYearHighToYearLowDiffPer());
             }
             if (ZERO_D.equals(diff) && ind1.getPe() != null && ind2.getPe() != null) {
-                diff = Double.compare(ind1.getPe(), ind2.getPe());
+                diff = generalUtil.compareWithNullInLast(ind1.getPe(), ind2.getPe());
             }
             if (ZERO_D.equals(diff) && ind1.getDy() != null && ind2.getDy() != null) {
-                diff = Double.compare(ind2.getDy(), ind1.getDy());
+                diff = generalUtil.compareWithNullInLast(ind2.getDy(), ind1.getDy());
             }
             if (ZERO_D.equals(diff) && ind1.getPb() != null && ind2.getPb() != null) {
-                diff = Double.compare(ind1.getPb(), ind2.getPb());
+                diff = generalUtil.compareWithNullInLast(ind1.getPb(), ind2.getPb());
             }
             if (ZERO_D.equals(diff) && ind1.getAdvances() != null && ind2.getAdvances() != null) {
                 diff = Long.compare(ind2.getAdvances(), ind1.getAdvances());
@@ -275,18 +285,18 @@ public class StockService {
             return;
         }
         Collections.sort(etfData.getData(), (etf1, etf2) -> {
-            int diff = Double.compare(etf2.getNavToMarketLtPDeltaPercent(), etf1.getNavToMarketLtPDeltaPercent());
+            int diff = generalUtil.compareWithNullInLast(etf2.getNavToMarketLtPDeltaPercent(), etf1.getNavToMarketLtPDeltaPercent());
             if (ZERO_D.equals(diff)) {
-                diff = Double.compare(etf1.getLatestToYearLowDiffPer(), etf2.getLatestToYearLowDiffPer());
+                diff = generalUtil.compareWithNullInLast(etf1.getLatestToYearLowDiffPer(), etf2.getLatestToYearLowDiffPer());
             }
             if (ZERO_D.equals(diff)) {
-                diff = Double.compare(etf1.getYearHighToYearLowDiffPer(), etf2.getYearHighToYearLowDiffPer());
+                diff = generalUtil.compareWithNullInLast(etf1.getYearHighToYearLowDiffPer(), etf2.getYearHighToYearLowDiffPer());
             }
             if (ZERO_D.equals(diff) && etf1.getQty() != null && etf2.getQty() != null) {
-                diff = Double.compare(etf2.getQty(), etf1.getQty());
+                diff = generalUtil.compareWithNullInLast(etf2.getQty(), etf1.getQty());
             }
             if (ZERO_D.equals(diff) && etf1.getPer() != null && etf2.getPer() != null) {
-                diff = Double.compare(etf1.getPer(), etf2.getPer());
+                diff = generalUtil.compareWithNullInLast(etf1.getPer(), etf2.getPer());
             }
             return diff;
         });
@@ -436,7 +446,7 @@ public class StockService {
         return oldProcessDto.getAllEtf().getData().stream()
                 .filter(etfData -> etfData != null
                         && StringUtils.isNotEmpty(etfData.getDate365dAgo())
-                        && etfData.getQty() != null && etfData.getQty() > 20000L //ideally, etfData.getQty() > 20,000L
+                        && etfData.getQty() != null && etfData.getQty() > LEAST_ETF_VOLUME
                         && (isInvestableIndex(oldProcessDto, etfData) || isPerformingEtf(etfData)))
                 .collect(Collectors.toList());
     }
@@ -472,9 +482,9 @@ public class StockService {
 
     private boolean isPerformingEtf(EtfData etfData) {
         return (etfData != null
-                && etfData.getLatestToYearLowDiffPer() != null && etfData.getLatestToYearLowDiffPer() < 12D //ideally, etfData.getLatestToYearLowDiffPer() < 12D
-                && etfData.getYearHighToYearLowDiffPer() != null && etfData.getYearHighToYearLowDiffPer() > 10D //Atleast 10% changes in year
-                && etfData.getNearWKH() != null && etfData.getNearWKH() > 4D//Makes sure we dont buy at year high
-                && etfData.getNavToMarketLtPDeltaPercent() != null && etfData.getNavToMarketLtPDeltaPercent() > -0.1D);//not buying too expensive from NAV
+                && etfData.getLatestToYearLowDiffPer() != null && etfData.getLatestToYearLowDiffPer() < MAX_LTP_TO_YRLOW_DIFF_PER_D
+                && etfData.getYearHighToYearLowDiffPer() != null && etfData.getYearHighToYearLowDiffPer() > LEAST_YearHighToYearLowDiffPer_D
+                && etfData.getNearWKH() != null && etfData.getNearWKH() > LEAST_YearHighToLatestDiffPer_D//Makes sure we dont buy at year high
+                && etfData.getNavToMarketLtPDeltaPercent() != null && etfData.getNavToMarketLtPDeltaPercent() > LEAST_NavToMarketLtPDeltaPercent_D);//not buying too expensive from NAV
     }
 }

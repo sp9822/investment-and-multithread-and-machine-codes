@@ -15,8 +15,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.Collections;
 
-import static org.example.Constants.HUNDREAD_D;
-import static org.example.Constants.ZERO_D;
+import static org.example.Constants.ZERO_I;
 
 @Service
 @Slf4j
@@ -50,6 +49,7 @@ public class NseServiceImpl implements NseService {
         for (NseIndexData nseIndexData : allIndices.getData()) {
             nseIndexData.setProcessedIndex(generalUtil.removeHypnUnderScorSpcSecIndAndGetLowerCase(nseIndexData.getIndex()));
             nseIndexData.setProcessedIndexSymbol(generalUtil.removeHypnUnderScorSpcSecIndAndGetLowerCase(nseIndexData.getIndex()));
+            nseIndexData.setYrMedianVal(generalUtil.getMedian(nseIndexData.getYearHigh(), nseIndexData.getYearLow()));
             nseIndexData.setYearHighToYearLowDiffPer(generalUtil.getDeltaPercent(nseIndexData.getYearHigh(), nseIndexData.getYearLow()));
             nseIndexData.setLatestToYearLowDiffPer(generalUtil.getDeltaPercent(nseIndexData.getLast(), nseIndexData.getYearLow()));
             nseIndexData.setYearHighToLatestDiffPer(generalUtil.getDeltaPercent(nseIndexData.getYearHigh(), nseIndexData.getLast()));
@@ -62,29 +62,29 @@ public class NseServiceImpl implements NseService {
             return;
         }
         Collections.sort(allIndices.getData(), (ind1, ind2) -> {
-            int diff = Double.compare(ind2.getYearHighToLatestDiffPer(), ind1.getYearHighToLatestDiffPer());
-            if (ZERO_D.equals(diff)) {
-                diff = Double.compare(ind1.getLatestToYearLowDiffPer(), ind2.getLatestToYearLowDiffPer());
+            int diff = generalUtil.compareWithNullInLast(ind2.getYearHighToLatestDiffPer(), ind1.getYearHighToLatestDiffPer());
+            if (ZERO_I.equals(diff)) {
+                diff = generalUtil.compareWithNullInLast(ind1.getLatestToYearLowDiffPer(), ind2.getLatestToYearLowDiffPer());
             }
-            if (ZERO_D.equals(diff)) {
-                diff = Double.compare(ind2.getYearHighToYearLowDiffPer(), ind1.getYearHighToYearLowDiffPer());
+            if (ZERO_I.equals(diff)) {
+                diff = generalUtil.compareWithNullInLast(ind2.getYearHighToYearLowDiffPer(), ind1.getYearHighToYearLowDiffPer());
             }
-            if (ZERO_D.equals(diff) && ind1.getPe() != null && ind2.getPe() != null) {
-                diff = Double.compare(ind1.getPe(), ind2.getPe());
+            if (ZERO_I.equals(diff) && ind1.getPe() != null && ind2.getPe() != null) {
+                diff = generalUtil.compareWithNullInLast(ind1.getPe(), ind2.getPe());
             }
-            if (ZERO_D.equals(diff) && ind1.getDy() != null && ind2.getDy() != null) {
-                diff = Double.compare(ind2.getDy(), ind1.getDy());
+            if (ZERO_I.equals(diff) && ind1.getDy() != null && ind2.getDy() != null) {
+                diff = generalUtil.compareWithNullInLast(ind2.getDy(), ind1.getDy());
             }
-            if (ZERO_D.equals(diff) && ind1.getPb() != null && ind2.getPb() != null) {
-                diff = Double.compare(ind1.getPb(), ind2.getPb());
+            if (ZERO_I.equals(diff) && ind1.getPb() != null && ind2.getPb() != null) {
+                diff = generalUtil.compareWithNullInLast(ind1.getPb(), ind2.getPb());
             }
-            if (ZERO_D.equals(diff) && ind1.getAdvances() != null && ind2.getAdvances() != null) {
+            if (ZERO_I.equals(diff) && ind1.getAdvances() != null && ind2.getAdvances() != null) {
                 diff = Long.compare(ind2.getAdvances(), ind1.getAdvances());
             }
-            if (ZERO_D.equals(diff) && ind1.getDeclines() != null && ind2.getDeclines() != null) {
+            if (ZERO_I.equals(diff) && ind1.getDeclines() != null && ind2.getDeclines() != null) {
                 diff = Long.compare(ind1.getDeclines(), ind2.getDeclines());
             }
-            if (ZERO_D.equals(diff) && ind1.getUnchanged() != null && ind2.getUnchanged() != null) {
+            if (ZERO_I.equals(diff) && ind1.getUnchanged() != null && ind2.getUnchanged() != null) {
                 diff = Long.compare(ind2.getUnchanged(), ind1.getUnchanged());
             }
             return diff;
@@ -100,7 +100,13 @@ public class NseServiceImpl implements NseService {
             return nseEtfResponse;
         } catch (Exception e) {
             log.error("Error fetching NSE ETF data: {}", e.getMessage(), e);
-            throw new RuntimeException("Error fetching NSE ETF data: " + e.getMessage(), e);
+            try {
+                Thread.sleep(10000l);
+                return getAllEtfWithInd(nseIndiaCookie, nseAllIndicesResponse);
+            } catch (InterruptedException interruptedException) {
+                interruptedException.printStackTrace();
+                throw new RuntimeException("Error fetching NSE ETF data: " + e.getMessage(), e);
+            }
         }
     }
 
@@ -111,6 +117,7 @@ public class NseServiceImpl implements NseService {
         for (EtfData etf : nseEtfResponse.getData()) {
             etf.setProcessedAssets(generalUtil.removeHypnUnderScorSpcSecIndAndGetLowerCase(etf.getAssets()));
             etf.setProcessedCompanyName(generalUtil.removeHypnUnderScorSpcSecIndAndGetLowerCase(etf.getCompanyName()));
+            etf.setYrMedianVal(generalUtil.getMedian(etf.getWkhi(), etf.getWklo()));
             etf.setNavToMarketLtPDelta(generalUtil.getDelta(etf.getLtP(), etf.getNav()));
             etf.setNavToMarketLtPDeltaPercent(generalUtil.getDeltaPercent(etf.getNav(), etf.getLtP()));
             etf.setYearHighToYearLowDiffPer(generalUtil.getDeltaPercent(etf.getWkhi(), etf.getWklo()));
@@ -152,18 +159,18 @@ public class NseServiceImpl implements NseService {
             return;
         }
         Collections.sort(etfData.getData(), (etf1, etf2) -> {
-            int diff = Double.compare(etf2.getNavToMarketLtPDeltaPercent(), etf1.getNavToMarketLtPDeltaPercent());
-            if (ZERO_D.equals(diff)) {
-                diff = Double.compare(etf1.getLatestToYearLowDiffPer(), etf2.getLatestToYearLowDiffPer());
+            int diff = generalUtil.compareWithNullInLast(etf2.getNavToMarketLtPDeltaPercent(), etf1.getNavToMarketLtPDeltaPercent());
+            if (ZERO_I.equals(diff)) {
+                diff = generalUtil.compareWithNullInLast(etf1.getLatestToYearLowDiffPer(), etf2.getLatestToYearLowDiffPer());
             }
-            if (ZERO_D.equals(diff)) {
-                diff = Double.compare(etf1.getYearHighToYearLowDiffPer(), etf2.getYearHighToYearLowDiffPer());
+            if (ZERO_I.equals(diff)) {
+                diff = generalUtil.compareWithNullInLast(etf1.getYearHighToYearLowDiffPer(), etf2.getYearHighToYearLowDiffPer());
             }
-            if (ZERO_D.equals(diff) && etf1.getQty() != null && etf2.getQty() != null) {
-                diff = Double.compare(etf2.getQty(), etf1.getQty());
+            if (ZERO_I.equals(diff) && etf1.getQty() != null && etf2.getQty() != null) {
+                diff = generalUtil.compareWithNullInLast(etf2.getQty(), etf1.getQty());
             }
-            if (ZERO_D.equals(diff) && etf1.getPer() != null && etf2.getPer() != null) {
-                diff = Double.compare(etf1.getPer(), etf2.getPer());
+            if (ZERO_I.equals(diff) && etf1.getPer() != null && etf2.getPer() != null) {
+                diff = generalUtil.compareWithNullInLast(etf1.getPer(), etf2.getPer());
             }
             return diff;
         });

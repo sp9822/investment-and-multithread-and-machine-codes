@@ -405,3 +405,4 @@ curl -X GET "http://localhost:8080/bse/investableEtfs" -H "Content-Type: applica
 - Memory leak prevention
 
 This implementation provides a robust, scalable, and maintainable solution for BSE ETF data retrieval while adhering to SOLID principles and industry best practices.
+

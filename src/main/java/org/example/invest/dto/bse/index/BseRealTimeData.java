@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
-//@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class BseRealTimeData extends IndexData {
 
     @JsonProperty("ScripFlagCode")
@@ -55,6 +55,9 @@ public class BseRealTimeData extends IndexData {
 
     @JsonProperty("Curvalue")
     private Double currentValue;
+
+    @JsonProperty("yrMedianVal")
+    private Double yrMedianVal;
 
     @JsonProperty("Prev_Close")
     private Double previousClose;

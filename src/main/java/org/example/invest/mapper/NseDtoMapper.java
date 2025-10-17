@@ -10,6 +10,7 @@ import org.example.invest.dto.nse.index.NseAllIndicesResponse;
 import org.example.invest.dto.nse.index.NseIndexData;
 import org.example.invest.dto.request.RequestBean;
 import org.example.invest.service.NseService;
+import org.example.invest.util.GeneralUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -20,11 +21,19 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.example.Constants.ZERO_D;
+import static org.example.ShortlistCriteriaConfig.LEAST_ETF_VOLUME;
+import static org.example.ShortlistCriteriaConfig.LEAST_NavToMarketLtPDeltaPercent_D;
+import static org.example.ShortlistCriteriaConfig.LEAST_YearHighToLatestDiffPer_D;
+import static org.example.ShortlistCriteriaConfig.LEAST_YearHighToYearLowDiffPer_D;
+import static org.example.ShortlistCriteriaConfig.MAX_LTP_TO_YRLOW_DIFF_PER_D;
 
 @Component
 public class NseDtoMapper {
     @Autowired
     private NseService nseService;
+
+    @Autowired
+    private GeneralUtil generalUtil;
 
     public NseDto getNseDto(RequestBean requestBean) {
         NseDto nseDto = new NseDto();
@@ -104,7 +113,7 @@ public class NseDtoMapper {
         return nseEtfResponse.getData().stream()
                 .filter(etfData -> etfData != null
                         && StringUtils.isNotEmpty(etfData.getDate365dAgo())
-                        && etfData.getQty() != null && etfData.getQty() > 20000L //ideally, etfData.getQty() > 20,000L
+                        && etfData.getQty() != null && etfData.getQty() > LEAST_ETF_VOLUME
                         && (isInvestableNseIndex(investableIndices, etfData) || isPerformingEtf(etfData)))
                 .collect(Collectors.toList());
     }
@@ -119,10 +128,10 @@ public class NseDtoMapper {
 
     private boolean isPerformingEtf(EtfData etfData) {
         return (etfData != null
-                && etfData.getLatestToYearLowDiffPer() != null && etfData.getLatestToYearLowDiffPer() < 12D //ideally, etfData.getLatestToYearLowDiffPer() < 12D
-                && etfData.getYearHighToYearLowDiffPer() != null && etfData.getYearHighToYearLowDiffPer() > 10D //Atleast 10% changes in year
-                && etfData.getNearWKH() != null && etfData.getNearWKH() > 4D//Makes sure we dont buy at year high
-                && etfData.getNavToMarketLtPDeltaPercent() != null && etfData.getNavToMarketLtPDeltaPercent() > -0.1D);//not buying too expensive from NAV
+                && etfData.getLatestToYearLowDiffPer() != null && etfData.getLatestToYearLowDiffPer() < MAX_LTP_TO_YRLOW_DIFF_PER_D
+                && etfData.getYearHighToYearLowDiffPer() != null && etfData.getYearHighToYearLowDiffPer() > LEAST_YearHighToYearLowDiffPer_D
+                && etfData.getNearWKH() != null && etfData.getNearWKH() > LEAST_YearHighToLatestDiffPer_D
+                && etfData.getNavToMarketLtPDeltaPercent() != null && etfData.getNavToMarketLtPDeltaPercent() > LEAST_NavToMarketLtPDeltaPercent_D);//not buying too expensive from NAV
     }
 
     public void addAllInvestableEtfAsPerBseIndices(NseDto nseDto, BseDto bseDto) {
@@ -155,8 +164,8 @@ public class NseDtoMapper {
             return false;
         }
         for (BseRealTimeData investableBseIndex : investableBseIndices) {
-            if (investableBseIndex != null &&
-                    (etfData.getProcessedAssets().contains(investableBseIndex.getProcessedIndex())
+            if (investableBseIndex != null && etfData.getQty() != null && etfData.getQty() > LEAST_ETF_VOLUME
+                    && (etfData.getProcessedAssets().contains(investableBseIndex.getProcessedIndex())
                             || etfData.getProcessedAssets().contains(investableBseIndex.getProcessedIndexSymbol())
                             || etfData.getProcessedCompanyName().contains(investableBseIndex.getProcessedIndex())
                             || etfData.getProcessedCompanyName().contains(investableBseIndex.getProcessedIndexSymbol()))

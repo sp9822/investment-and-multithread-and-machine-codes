@@ -20,11 +20,7 @@ public class SecurityConfig {
         http.csrf(csrf -> csrf.disable()) // Disable CSRF for API endpoints
                 .authorizeHttpRequests(authz -> authz
                         // Allow public access to stocks API endpoints
-                        .requestMatchers("/api/stocks/**").permitAll()
-                        //Allow bse APIs
-                        .requestMatchers("/bse/**").permitAll()
-                        //Allow nse APIs
-                        .requestMatchers("/nse/**").permitAll()
+                        .requestMatchers("/**").permitAll()
                         // Allow public access to Swagger/OpenAPI documentation
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                         // Allow public access to health check endpoints

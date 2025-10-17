@@ -42,6 +42,9 @@ public class EtfData {
     @JsonProperty("ltP")
     private Double ltP;
 
+    @JsonProperty("yrMedianVal")
+    private Double yrMedianVal;
+
     @JsonProperty("nav")
     private Double nav;
 

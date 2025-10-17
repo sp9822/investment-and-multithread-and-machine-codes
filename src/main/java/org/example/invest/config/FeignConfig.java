@@ -16,31 +16,34 @@ import java.util.concurrent.TimeUnit;
  */
 @Configuration
 public class FeignConfig {
-    
+
     /**
      * Configure Feign logging level
+     *
      * @return Logger.Level for Feign requests/responses
      */
     @Bean
     public Logger.Level feignLoggerLevel() {
         return Logger.Level.FULL; // Logs request and response headers and body
     }
-    
+
     /**
      * Configure request options for Feign clients
+     *
      * @return Request.Options with custom timeout settings
      */
     @Bean
     public Request.Options requestOptions() {
         return new Request.Options(
-            30, TimeUnit.SECONDS,  // Connect timeout (increased for NSE API)
-            60, TimeUnit.SECONDS, // Read timeout
-            true                  // Follow redirects
+                30, TimeUnit.SECONDS,  // Connect timeout (increased for NSE API)
+                60, TimeUnit.SECONDS, // Read timeout
+                true                  // Follow redirects
         );
     }
-    
+
     /**
      * Request interceptor to handle compression properly
+     *
      * @return RequestInterceptor that manages Accept-Encoding headers
      */
     @Bean
@@ -48,24 +51,27 @@ public class FeignConfig {
         return template -> {
             // Remove Brotli from Accept-Encoding to avoid decompression issues
             template.header(HttpHeaders.ACCEPT_ENCODING, "gzip, deflate");
+            template.header(HttpHeaders.REFERER, "https://www.nseindia.com/market-data/exchange-traded-funds-etf");
+            template.header("priority", "u=1, i");
         };
     }
 
     /**
      * Custom error decoder for handling HTTP errors
+     *
      * @return Custom ErrorDecoder implementation
      */
     @Bean
     public ErrorDecoder errorDecoder() {
         return new CustomErrorDecoder();
     }
-    
+
     /**
      * Custom error decoder implementation
      */
     public static class CustomErrorDecoder implements ErrorDecoder {
         private final ErrorDecoder defaultErrorDecoder = new Default();
-        
+
         @Override
         public Exception decode(String methodKey, feign.Response response) {
             switch (response.status()) {

@@ -20,8 +20,11 @@ import org.example.invest.dto.nse.index.NseIndexData;
 @NoArgsConstructor
 @ToString
 @EqualsAndHashCode
-//@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class BseEtfData {
+
+    @JsonProperty("scripCodeId")
+    private Long scripCodeId;
 
     @JsonProperty("scripCode")
     private String scripCode;
@@ -50,6 +53,9 @@ public class BseEtfData {
     @JsonProperty("ltp")
     private Double ltp;
 
+    @JsonProperty("yrMedianVal")
+    private Double yrMedianVal;
+
     @JsonProperty("yearHighToLatestDiffPer")
     private Double yearHighToLatestDiffPer;
 
@@ -70,6 +76,9 @@ public class BseEtfData {
 
     @JsonProperty("high")
     private Double high;
+
+    @JsonProperty("wtAvgPrice")
+    private Double wtAvgPrice;
 
     @JsonProperty("low")
     private Double low;
@@ -137,9 +146,6 @@ public class BseEtfData {
     @JsonProperty("floorPrice")
     private Double floorPrice;
 
-    @JsonProperty("wtAvgPrice")
-    private Double wtAvgPrice;
-
     @JsonProperty("Circuit")
     private Double circuit;
 
@@ -175,4 +181,7 @@ public class BseEtfData {
 
     @JsonProperty("nseIndexData")
     private NseIndexData nseIndexData;
+
+    @JsonProperty("scripHeaderData")
+    private ScripHeaderData scripHeaderData;
 }
