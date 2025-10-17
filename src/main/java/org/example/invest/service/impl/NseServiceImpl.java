@@ -32,7 +32,13 @@ public class NseServiceImpl implements NseService {
             return process(nseClient.getAllIndices(null));
         } catch (Exception e) {
             log.error("Error fetching NSE indices: {}", e.getMessage(), e);
-            throw new RuntimeException("Error fetching NSE indices: " + e.getMessage(), e);
+            try {
+                Thread.sleep(10000l);
+                return getAllIndices();
+            } catch (InterruptedException interruptedException) {
+                interruptedException.printStackTrace();
+                throw new RuntimeException("Error fetching NSE indices: " + e.getMessage(), e);
+            }
         }
     }
 
