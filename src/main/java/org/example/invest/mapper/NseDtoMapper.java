@@ -128,9 +128,10 @@ public class NseDtoMapper {
 
     private boolean isPerformingEtf(EtfData etfData) {
         return (etfData != null
-                && etfData.getLatestToYearLowDiffPer() != null && etfData.getLatestToYearLowDiffPer() < MAX_LTP_TO_YRLOW_DIFF_PER_D
                 && etfData.getYearHighToYearLowDiffPer() != null && etfData.getYearHighToYearLowDiffPer() > LEAST_YearHighToYearLowDiffPer_D
                 && etfData.getNearWKH() != null && etfData.getNearWKH() > LEAST_YearHighToLatestDiffPer_D
+                && etfData.getLatestToYearLowDiffPer() != null && etfData.getLatestToYearLowDiffPer() < MAX_LTP_TO_YRLOW_DIFF_PER_D
+                && etfData.getNearWKH() > etfData.getLatestToYearLowDiffPer()
                 && etfData.getNavToMarketLtPDeltaPercent() != null && etfData.getNavToMarketLtPDeltaPercent() > LEAST_NavToMarketLtPDeltaPercent_D);//not buying too expensive from NAV
     }
 

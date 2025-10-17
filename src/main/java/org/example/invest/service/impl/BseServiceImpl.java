@@ -223,9 +223,10 @@ public class BseServiceImpl implements BseService {
                 && bseRealTimeData.getWeek52High() != null && bseRealTimeData.getWeek52High() > ZERO_D
                 //&& bseRealTimeData.getOneYearAgoVal() != null && bseRealTimeData.getOneYearAgoVal() > ZERO_D
                 //&& bseRealTimeData.getWeek52High() > bseRealTimeData.getOneYearAgoVal()
-                && bseRealTimeData.getLatestToYearLowDiffPer() != null && bseRealTimeData.getLatestToYearLowDiffPer() < MAX_LTP_TO_YRLOW_DIFF_PER_D
                 && bseRealTimeData.getYearHighToYearLowDiffPer() != null && bseRealTimeData.getYearHighToYearLowDiffPer() > LEAST_YearHighToYearLowDiffPer_D
                 && bseRealTimeData.getYearHighToLatestDiffPer() != null && bseRealTimeData.getYearHighToLatestDiffPer() > LEAST_YearHighToLatestDiffPer_D//Makes sure we dont buy at year high
+                && bseRealTimeData.getLatestToYearLowDiffPer() != null && bseRealTimeData.getLatestToYearLowDiffPer() < MAX_LTP_TO_YRLOW_DIFF_PER_D
+                && bseRealTimeData.getYearHighToLatestDiffPer() > bseRealTimeData.getLatestToYearLowDiffPer()
                 && filterOutIndexAsPerPePbDy(bseRealTimeData)
         );
     }
