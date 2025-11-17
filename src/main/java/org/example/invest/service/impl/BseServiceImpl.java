@@ -225,8 +225,9 @@ public class BseServiceImpl implements BseService {
                 //&& bseRealTimeData.getWeek52High() > bseRealTimeData.getOneYearAgoVal()
                 && bseRealTimeData.getYearHighToYearLowDiffPer() != null && bseRealTimeData.getYearHighToYearLowDiffPer() > LEAST_YearHighToYearLowDiffPer_D
                 && bseRealTimeData.getYearHighToLatestDiffPer() != null && bseRealTimeData.getYearHighToLatestDiffPer() > LEAST_YearHighToLatestDiffPer_D//Makes sure we dont buy at year high
-                && bseRealTimeData.getLatestToYearLowDiffPer() != null && bseRealTimeData.getLatestToYearLowDiffPer() < MAX_LTP_TO_YRLOW_DIFF_PER_D
-                && bseRealTimeData.getYearHighToLatestDiffPer() > bseRealTimeData.getLatestToYearLowDiffPer()
+                && bseRealTimeData.getLatestToYearLowDiffPer() != null
+                && (bseRealTimeData.getLatestToYearLowDiffPer() < MAX_LTP_TO_YRLOW_DIFF_PER_D
+                    || bseRealTimeData.getYearHighToLatestDiffPer() > bseRealTimeData.getLatestToYearLowDiffPer())
                 && filterOutIndexAsPerPePbDy(bseRealTimeData)
         );
     }
@@ -436,9 +437,10 @@ public class BseServiceImpl implements BseService {
     private boolean isPerformingEtf(BseEtfData etfData) {
         // Basic criteria for investable ETFs
         return (etfData != null
-                && etfData.getLatestToYearLowDiffPer() != null && etfData.getLatestToYearLowDiffPer() < 12D //ideally, etfData.getLatestToYearLowDiffPer() < 12D
-                && etfData.getYearHighToYearLowDiffPer() != null && etfData.getYearHighToYearLowDiffPer() > 10D //Atleast 10% changes in year
-                && etfData.getYearHighToLatestDiffPer() != null && etfData.getYearHighToLatestDiffPer() > 4D//Makes sure we dont buy at year high
+                && etfData.getYearHighToYearLowDiffPer() != null && etfData.getYearHighToYearLowDiffPer() > LEAST_YearHighToYearLowDiffPer_D //Atleast 10% changes in year
+                && etfData.getYearHighToLatestDiffPer() != null && etfData.getYearHighToLatestDiffPer() > LEAST_YearHighToLatestDiffPer_D//Makes sure we dont buy at year high
+                && (etfData.getLatestToYearLowDiffPer() != null && etfData.getLatestToYearLowDiffPer() < MAX_LTP_TO_YRLOW_DIFF_PER_D //ideally, etfData.getLatestToYearLowDiffPer() < 12D
+                    || etfData.getYearHighToLatestDiffPer() > etfData.getLatestToYearLowDiffPer())
                 && isLtpGoodAsPerNav(etfData)
                 //&& (etfData.getIsActive() != null || etfData.getIsActive())
                 //&& !Boolean.TRUE.equals(etfData.getIsSuspended())

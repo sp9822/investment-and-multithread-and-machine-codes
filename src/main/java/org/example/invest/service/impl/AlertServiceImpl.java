@@ -50,15 +50,15 @@ public class AlertServiceImpl implements AlertService {
     private static Set<String> dailyNseIndices;
     private static Set<String> dailyBseIndices;
 
-    @Scheduled(cron = "0 8 * * * *")
+    @Scheduled(cron = "0 0 8 * * *")//8:00 am everyday
     @PostConstruct
     public void refreshDaily() {
-        telegramClient.sendMsg(shubhEtfBotToken, jdShubhEtfBotChatId
-                , new StringBuilder("ETF alerts for DATE: ").append(new Date()).toString());
         dailyNseEtfSymbols = new HashSet<>();
         dailyBseEtfScripCodes = new HashSet<>();
         dailyNseIndices = new HashSet<>();
         dailyBseIndices = new HashSet<>();
+        telegramClient.sendMsg(shubhEtfBotToken, jdShubhEtfBotChatId
+                , new StringBuilder("ETF alerts for DATE: ").append(new Date()).toString());
     }
 
     @Override

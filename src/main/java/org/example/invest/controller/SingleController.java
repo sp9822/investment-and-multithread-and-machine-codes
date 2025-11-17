@@ -38,8 +38,9 @@ public class SingleController {
         return scheduleInvestableNotification();
     }
 
-    @Scheduled(cron = "0 */5 9-14 * * 1-5") //every 5 minutes from Monday to Friday between 9 AM and 2:55 PM
-    @Scheduled(cron = "0 0-30/5 15 * * 1-5")//every 5 minutes from Monday to Friday between 3 PM and 3:30 PM
+    @Scheduled(cron = "0 19,30,45 9 * * 1-5")//every 15 minutes from Monday to Friday between 9:19 AM and 9:45 AM = 3 times a day
+    @Scheduled(cron = "0 */18 10-14 * * 1-5")//every 18 minutes from Monday to Friday between 10 AM and 2:42 PM = 17 times a day
+    @Scheduled(cron = "0 0-30/20 15 * * 1-5")//every 20 minutes from Monday to Friday between 3 PM and 3:30 PM = 2 times a day
     public EtfResponse scheduleInvestableNotification() {
         return alertService.sendAlerts();
     }

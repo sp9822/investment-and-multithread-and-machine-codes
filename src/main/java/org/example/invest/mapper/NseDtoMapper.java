@@ -79,9 +79,11 @@ public class NseDtoMapper {
                 && nseIndexData.getYearHigh() != null && nseIndexData.getYearHigh() > ZERO_D
                 && nseIndexData.getOneYearAgoVal() != null && nseIndexData.getOneYearAgoVal() > ZERO_D
                 && nseIndexData.getYearHigh() > nseIndexData.getOneYearAgoVal()
-                && nseIndexData.getLatestToYearLowDiffPer() != null && nseIndexData.getLatestToYearLowDiffPer() < 12D//Ideally nseIndexData.getLatestToYearLowDiffPer() < 12D
-                && nseIndexData.getYearHighToYearLowDiffPer() != null && nseIndexData.getYearHighToYearLowDiffPer() > 10D //Yearly 10% change
-                && nseIndexData.getYearHighToLatestDiffPer() != null && nseIndexData.getYearHighToLatestDiffPer() > 4D//Makes sure we dont buy at year high
+                && nseIndexData.getYearHighToYearLowDiffPer() != null && nseIndexData.getYearHighToYearLowDiffPer() > LEAST_YearHighToYearLowDiffPer_D //Yearly 10% change
+                && nseIndexData.getYearHighToLatestDiffPer() != null && nseIndexData.getYearHighToLatestDiffPer() > LEAST_YearHighToLatestDiffPer_D//Makes sure we dont buy at year high
+                && nseIndexData.getLatestToYearLowDiffPer() != null
+                && (nseIndexData.getLatestToYearLowDiffPer() < MAX_LTP_TO_YRLOW_DIFF_PER_D//Ideally nseIndexData.getLatestToYearLowDiffPer() < 12D
+                    || nseIndexData.getYearHighToLatestDiffPer() > nseIndexData.getLatestToYearLowDiffPer())
                 && nseIndexData.getPe() != null && nseIndexData.getPe() <= 22D
                 && nseIndexData.getPb() != null && nseIndexData.getPb() <= 3.5D
                 && nseIndexData.getDy() != null && nseIndexData.getDy() >= 1.2D);
@@ -130,8 +132,9 @@ public class NseDtoMapper {
         return (etfData != null
                 && etfData.getYearHighToYearLowDiffPer() != null && etfData.getYearHighToYearLowDiffPer() > LEAST_YearHighToYearLowDiffPer_D
                 && etfData.getNearWKH() != null && etfData.getNearWKH() > LEAST_YearHighToLatestDiffPer_D
-                && etfData.getLatestToYearLowDiffPer() != null && etfData.getLatestToYearLowDiffPer() < MAX_LTP_TO_YRLOW_DIFF_PER_D
-                && etfData.getNearWKH() > etfData.getLatestToYearLowDiffPer()
+                && etfData.getLatestToYearLowDiffPer() != null
+                && (etfData.getLatestToYearLowDiffPer() < MAX_LTP_TO_YRLOW_DIFF_PER_D
+                    || etfData.getNearWKH() > etfData.getLatestToYearLowDiffPer())
                 && etfData.getNavToMarketLtPDeltaPercent() != null && etfData.getNavToMarketLtPDeltaPercent() > LEAST_NavToMarketLtPDeltaPercent_D);//not buying too expensive from NAV
     }
 
